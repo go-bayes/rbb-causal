@@ -1,0 +1,23 @@
+name: "rbb-causal"
+title: "RBB Causal Inference"
+description: |
+  How shall we infer cause from effect in observational studies?
+output_dir: "docs"
+creative_commons: CC BY-NC-SA
+base_url: https://go-bayes.github.io/rbb-causal
+repository_url: https://github.com/go-bayes/rbb-causal
+twitter:
+  site: "@go_bayes"
+  creator: "@go_bayes"
+theme: theme.css
+navbar:
+  right:
+    - text: "Causal Inference"
+      href: index.html
+    - text: "About"
+      href: about.html
+output:
+  distill::distill_article:
+    toc: yes
+    toc_level: 3
+
