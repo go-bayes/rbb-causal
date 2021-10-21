@@ -1,8 +1,18 @@
 ---
-title: "My Website"
-description: |
-  Welcome to the website. I hope you enjoy it!
-site: distill::distill_website
+title: "Recommendations for Causal Inference in Observational Studies"
+description: ""
+author:
+  - name: Joseph Bulbulia
+    url: https://josephbulbulia.netlify.app
+    affiliation: Victoria University of Wellington
+    affiliation_url: https://www.wgtn.ac.nz
+    orcid_id: 0000-0002-5861-2056
+date: 2021-OCT-22
+output:
+  distill::distill_article:
+    self_contained: true
+    toc: true
+    code_folding: true
 ---
 
 ```{r setup, include=FALSE}
