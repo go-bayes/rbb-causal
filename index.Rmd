@@ -1,5 +1,5 @@
 ---
-title: "Recommendations for Causal Inference in Observational Studies"
+title: "The perils of “control:” why causal identification requires care"
 description: ""
 author:
   - name: Joseph Bulbulia
@@ -60,11 +60,21 @@ library("rstanarm")
 library("tidybayes")
 library("bayesplot")
 library("easystats")
+library("ggplot2")
 # rstan options
 rstan_options(auto_write=TRUE)
 options(mc.cores=parallel::detectCores ())
 theme_set(theme_classic())
 ```
+
+
+
+## Directed Acyclical Graphs 
+
+A directed acyclical graph (DAG) is a heuristic tools for investigating causal inference in a regression model. A DAG is a graph that has nodes and edges. The edges point in the direction of a causal influence. The flows are "acyclical" because a cause is not at the same time an effect. The `ggdag` package in R is useful for identifying potential confounding in your dataset.
+
+**Importantly: assessing causal inference using a DAG typically requires assumptions that are *not* part of your dataset. A poorly specified DAG will lead to poor inference. There is _no_ working around this.**
+
 
 
 ## Omitted variable bias
@@ -80,9 +90,10 @@ theme_set(theme_dag())
 
 # create confounded triangle
 d1 <- confounder_triangle() %>%
-  ggdag_dconnected()
+  ggdag_dconnected() 
 
-d1
+p1 <- d1 + labs(title = "Omitted variable confounding")
+p1
 ```
 
 We can simulate date that have this causal relationship and ask what would happen were we to regress X on Y without accounting for Z. 
@@ -96,7 +107,7 @@ y <- rnorm(N , z) # sim z -> y
 df <- data.frame(x, z, y)
 
 # note there is a predictive relationship between X to Y
-plot(x, y)
+plot(x, y) 
 ```
 
 Regressing X on Y: 
@@ -110,34 +121,6 @@ X and Y are correlated. If we know X we can better predict Y. However our abilit
 
 To understand the implications of information flow with in a regression model we may use directed acylical graphs or DAGS
 
-## Directed Acyclical Graphs 
-
-A directed acyclical graph (DAG) is a heuristic tools for investigating causal inference in a regression model. A DAG is a graph that has nodes and edges. The edges point in the direction of a causal influence. The flows are "acyclical" because a cause is not at the same time an effect. The `ggdag` package in R is useful for identifying potential confounding in your dataset.
-
-**Importantly: assessing causal inference using a DAG typically requires assumptions that are *not* part of your dataset. A poorly specified DAG will lead to poor inference. There is _no_ working around this.**
-
-
-#### Aside 
-
-In the causal inference literature, we evaluate dependencies using the langauge of "conditional independence."  
-
-Once we condition on Z, the link between X and Y is broken.
-
-
-```{r}
-# we can use the language of conditional independence
-library(dagitty)
-g <- dagitty( "dag{ x <- z -> y }" )
-impliedConditionalIndependencies( g )
-```
-
-We can use implied conditional independencies to test whether our DAG is right. For example, if X were to remain reliably predictive of Y, then we would know that the DAG we have drawn here is not correct. 
-
-### Confounding controls
-
-Many applied scientists equate omitted variable bias with confounding.  For this reason, they seek to "control" for every variable that might be associated with both X and Y.  If the relationship between X and Y holds after including such "controls," many applied scientist will infer that there is a causal relationship between X and Y.  We will see that this is not the case; quite the opposite, controlling for many variables is an invitation to confounding, leading to erroneous causal inference.  Do not adopt a "causal salad" approach to regression.
-
-> “But the approach which dominates in many parts of biology and the social sciences is instead CAUSAL SALAD. Causal salad means tossing various “control” variables into a statistical model, observing changes in estimates, and then telling a story about causation. Causal salad seems founded on the notion that only omitted variables can mislead us about causation. But included variables can just as easily confound us. When tossing a causal salad, a model that makes good predictions may still mislead about causation. If we use the model to plan an intervention, it will get everything wrong. Richard McElreath “Statistical Rethinking" Chapter 1, p46.
 
 
 ### Omitted variable DAG
@@ -156,7 +139,7 @@ ggdag_ov <- dagify(y ~ z,
 
 # plot the DAG
 ggdag_ov %>%
-  ggdag()
+  ggdag() + labs(title = "Omitted variable DAG")
 ```
 
 Next we ask `ggdag` which variables we need to include if we are to obtain an unbiased estimate of the outcome from the exposure:
@@ -178,9 +161,16 @@ m1 <- lm(y ~ x + z, data = df)
 parameters::model_parameters(m1)
 ```
 
+## Confounding controls
+
+Many applied scientists equate omitted variable bias with confounding.  For this reason, they seek to "control" for every variable that might be associated with both X and Y.  If the relationship between X and Y holds after including such "controls," many applied scientist will infer that there is a causal relationship between X and Y.  We will see that this is not the case; quite the opposite, controlling for many variables is an invitation to confounding, leading to erroneous causal inference.  Do not adopt a "causal salad" approach to regression.
+
+> “But the approach which dominates in many parts of biology and the social sciences is instead CAUSAL SALAD. Causal salad means tossing various “control” variables into a statistical model, observing changes in estimates, and then telling a story about causation. Causal salad seems founded on the notion that only omitted variables can mislead us about causation. But included variables can just as easily confound us. When tossing a causal salad, a model that makes good predictions may still mislead about causation. If we use the model to plan an intervention, it will get everything wrong. Richard McElreath “Statistical Rethinking" Chapter 1, p46.
 
 
-## Mediation and causation
+##  Post-treatment confounding
+
+### Mediation and causation
 
 Suppose we were interested in the causal effect of X on Y.  We have a direct effect of X on Y as well as an indirect effect of X on Y through M. We use `ggdag` to draw the DAG:
 
@@ -207,7 +197,7 @@ ggdag::ggdag_adjustment_set( dag_1 )
 
 ```
 
-'Backdoor Paths Unconditionally Closed' means that, assuming the DAG we have drawn is correct, we may obtain an unbiased estimate of X on Y without including additional variables. 
+'Backdoor Paths Unconditionally Closed' means that, assuming the DAG we have drawn is correct, we may obtain an unbiased estimate for the total effect of X on Y without including additional variables. 
 
 Later we shall understand why this is the case.^[We shall see there is no "backdoor path" from X to Y that would bias our estimate, hence the estimate X->Y is an unbiased causal estimate -- again, conditional on our DAG.]
 
@@ -243,7 +233,7 @@ First we ask, is X is related to Y?
 
 ```{r}
 m2 <- lm(y ~ x_s, data = df2)
-parameters::model_parameters(m2)
+parameters::model_parameters(m2)%>% print_html()
 ```
 
 Yes.
@@ -252,7 +242,7 @@ Next we ask, Is X related to Y conditional on M?
 
 ```{r}
 m2 <- lm(y ~ x_s + m_s, data = df2)
-parameters::model_parameters(m2)
+parameters::model_parameters(m2) %>% print_html()
 ```
 
 Yes, but notice this is a different question. The effect of X is attenuated because M contributes to the causal effect of Y. 
@@ -270,7 +260,7 @@ m1 <- brms::brm(
   file = here::here("models", "mediation-lect11-1")
 )
 
-parameters::model_parameters(m1)
+parameters::model_parameters(m1) %>% print_html()
 ```
 
 Recalling:
@@ -306,18 +296,44 @@ So we can ask how X affects Y  in relation to X's effect on M.
 
 However, to obtain an unbiased causal estimate of X on Y we only needed to include X We didn't need to condition on M to estimate the *causal* effect of X.
 
-## Pipe confounding (full mediation)
+### Pipe counfounding
 
 Suppose we are interested in the effect of x on y, in a scenario when m fully mediates the relationship of x on y.
 
 ```{r}
-mediation_triangle(
-  x = NULL,
-  y = NULL,
-  m = NULL,
-  x_y_associated = FALSE
-) %>%
-  ggdag()
+# dm <- mediation_triangle(
+#   x = NULL,
+#   y = NULL,
+#   m = NULL,
+#   x_y_associated = FALSE,
+#     edge_type = "link_arc") %>%
+#   ggdag()
+# # dm
+
+dm<- dagify( 
+       y ~ m,
+       m ~ x, 
+       labels = c("y" = "Satisfaction with life", 
+                  "m" = "Friendships",
+                  "x" = "Religious Service")
+       )
+  
+       
+pdm <- ggdag(dm, text = FALSE, from = "x",
+                   to = "y", use_labels = "label")
+
+pdm
+pdm2 <- ggdag_dseparated(dm, 
+                         from = "x",
+                   to = "y",
+                   controlling_for = "m",text = FALSE, use_labels = "label")
+
+library(patchwork)
+p2 <- pdm + pdm2 + plot_annotation(tag_levels = 'a', title = "Post-treatment confounding", subtitle = "When the causal effect of x on y is fully mediated, controlling for a mediator will block the path between x and y")
+p2 
+
+# fig2 
+
 ```
 
 What variables do we need to include to obtain an unbiased estimate of X on Y?
@@ -380,7 +396,7 @@ If we were interested in assessing x$\to$y but x were to effect y through m (i.e
 
 In experiments we should never condition on a post-treatment variable.
 
-## Masked relationships
+### Masked relationships
 
 Imagine two variables were to affect an outcome. Both are correlated with each other. One affects the outcome positively and the other affects the outcome negatively. How shall we investigate the causal role of the focal predictor?
 
@@ -454,7 +470,8 @@ m2 <- brms::brm(
   file = here::here("models","mediation-lect11-2")
 )
 
-parameters::model_parameters(m2)
+# parameters::model_parameters(m2)%>%
+#   print_html()
 ```
 
 Recalling:
@@ -499,6 +516,16 @@ Is the DAG wrong?
 No. The fact that C$\to$R is positive and R$\to$K is negative means that if we were to increase C, we wouldn't reliably increase K. The total effect of C just isn't reliable!
 
 ## Collider Confounding
+
+
+Collider confounding occurs when we condition on a common effect of x and y.
+
+```{r}
+p3 <- collider_triangle() %>% 
+  ggdag_dseparated(controlling_for = "m") 
+
+p3 + labs(title = "Collider confounding")
+```
 
 Richard McElreath describes the selection-distortion effect (Berkson's paradox) as an example of Collider Confounding [@mcelreath2020].
 
@@ -620,7 +647,30 @@ d %>%
 
 Notice, once we know a proposal has been selected, it if is newsworthy we can predict that it is less trustworthy. Our simulation produces this prediction even though we simulated a world in which there is no relationship between trustworthiness and newsworthiness.
 
-Selection bias is commonplace. Imagine a world in which there is no relationship between merit and one's tendency to complain about marks. Then imagine a selection process in which people get good marks either from merit or because they complain. What does complaining tell us about the merit of a student?
+Selection bias is commonplace. Imagine that religious service attendance reduces psychological distress and that having a sense of meaning in life reduces distress. Imagine that church attenance does not affect sense of meaning in life. "Controlling for" distress will make it appear as though church attendance causes meaning in life because distress "shares" information. 
+
+
+
+```{r code_folding = TRUE}
+dag_ml <- dagify(d ~ rs,
+                 d ~ m,
+                 labels = c("rs" = "Religious Service",
+                            "d" = "Psychological Distress",
+                            "m" = "Meaning in Life")) %>%
+  tidy_dagitty(layout = "nicely")
+
+
+
+pp3 <- ggdag_dseparated(dag_ml, 
+                 from = "rs",
+                 to = "m",
+                 controlling_for = "d",
+                 text = FALSE, use_labels = "label")
+
+p3 <- pp3 + labs(title="Collider confounding")
+p3
+```
+
 
 ## Collider bias within experiments
 
@@ -750,6 +800,46 @@ dag_sd %>%
           subtitle = "D induces collider bias")
 ```
 
+
+Let's return to our previous example about church attendance. Imagine that people who are distressed have lower income, and that income is otherwise unrelated to meaning in life or church attendance.  Controlling for a "descendent" of distress will open a relationship beween church attendance and meaning in life. 
+
+
+```{r code_folding = TRUE}
+dag_ml2 <- dagify(d ~ rs,
+                 d ~ m,
+                 i ~ d,
+                 labels = c("rs" = "Religious Service",
+                            "d" = "Psychological Distress",
+                            "m" = "Meaning in Life",
+                            "i" = "Income")) %>%
+  tidy_dagitty(layout = "nicely")
+
+
+
+pp4 <- ggdag_dseparated(dag_ml2, 
+                 from = "rs",
+                 to = "m",
+                 controlling_for = "i",
+                 text = FALSE, use_labels = "label")
+
+p4 <- pp4 + labs(title="Collider confounding with descendents" , subtitle = "Confounding arises when we control for a descendent of a collider")
+
+pp5 <- ggdag_dseparated(dag_ml2, 
+                 from = "rs",
+                 to = "m",
+                 text = FALSE, use_labels = "label")
+
+p5 <- pp5 +  labs(title=" Avoid collider confounding" , subtitle = "We avoid collider confouding by leaving the collider out of our model")
+```
+
+```{r}
+(p3 + p4) /p5 + plot_annotation(tag_levels = 'a') + plot_layout(guides = 'collect')
+
+# fig3 12 x 12
+```
+
+
+
 ## Rules for avoiding confounding
 
 McElreath offers the following advice in *Statistical Rethinking*, p.286
@@ -764,6 +854,22 @@ McElreath offers the following advice in *Statistical Rethinking*, p.286
 
 Practically speaking this can be very difficult. We often have many paths to consider.
 
+
+## Conditional Independence 
+
+In the causal inference literature, we evaluate dependencies using the langauge of "conditional independence."  
+
+Once we condition on Z, the link between X and Y is broken.
+
+
+```{r}
+# we can use the language of conditional independence
+library(dagitty)
+g <- dagitty( "dag{ x <- z -> y }" )
+impliedConditionalIndependencies( g )
+```
+
+We can use implied conditional independencies to test whether our DAG is right. For example, if X were to remain reliably predictive of Y, then we would know that the DAG we have drawn here is not correct. 
 
 
 ## Readings
