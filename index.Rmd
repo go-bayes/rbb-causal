@@ -1,5 +1,5 @@
 ---
-title: "The perils of “control:” why causal identification requires care"
+title: "Causal confounding and causal inference: advice to authors"
 description: ""
 author:
   - name: Joseph Bulbulia
@@ -29,29 +29,37 @@ knitr::opts_chunk$set(
 ```
 
 
-```{r code_folding = TRUE}
+```{r code_folding = FALSE, echo = TRUE}
 # packages
-# install_rethinking
+
 # function for installing dependencies
-ipak <- function(pkg){
-new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-if (length(new.pkg)) 
-    install.packages(new.pkg, dependencies = TRUE) 
-sapply(pkg, require, character.only = TRUE)
+ipak <- function(pkg) {
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg))
+    install.packages(new.pkg, dependencies = TRUE)
+  sapply(pkg, require, character.only = TRUE)
 }
 # usage
-packages <- c("coda", "plyr", "mvtnorm", "scales", "dagitty")
+packages <- c(
+  "coda",
+  "plyr",
+  "mvtnorm",
+  "scales",
+  "dagitty",
+  "ggdag",
+  "patchwork",
+  "tidyverse",
+  "brms",
+  "rstan"
+  "rstanarm",
+  "bayesplot",
+  "easystats",
+  "ggplot2"
+)
 ipak(packages)
-# next install rethinking
-if (!require(rethinking)) {
-  devtools::install_github("rmcelreath/rethinking")
-}
-#next install ggdag
-if (!require(ggdag)) {
-  devtools::install_github("malcolmbarrett/ggdag")
-}
 
-# installed from previous lectures
+
+# packages
 library("tidyverse")
 library("ggdag")
 library("brms")
@@ -61,9 +69,11 @@ library("tidybayes")
 library("bayesplot")
 library("easystats")
 library("ggplot2")
+library("patchwork")
+
 # rstan options
-rstan_options(auto_write=TRUE)
-options(mc.cores=parallel::detectCores ())
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores ())
 theme_set(theme_classic())
 ```
 
@@ -71,7 +81,9 @@ theme_set(theme_classic())
 
 ## Directed Acyclical Graphs 
 
-A directed acyclical graph (DAG) is a heuristic tools for investigating causal inference in a regression model. A DAG is a graph that has nodes and edges. The edges point in the direction of a causal influence. The flows are "acyclical" because a cause is not at the same time an effect. The `ggdag` package in R is useful for identifying potential confounding in your dataset.
+A directed acyclical graph (DAG) is a heuristic tools for investigating causal inference in a regression model. A DAG is a graph that has nodes and edges. The edges point in the direction of a causal influence. The flows are "acyclical" because a cause is not at the same time an effect. 
+
+The `ggdag` package in R is useful for identifying potential confounding in your dataset.
 
 **Importantly: assessing causal inference using a DAG typically requires assumptions that are *not* part of your dataset. A poorly specified DAG will lead to poor inference. There is _no_ working around this.**
 
@@ -90,15 +102,38 @@ theme_set(theme_dag())
 
 # create confounded triangle
 d1 <- confounder_triangle() %>%
-  ggdag_dconnected() 
+  ggdag_dconnected()
 
-p1 <- d1 + labs(title = "Omitted variable confounding")
-p1
+
+
+# code for creating a DAG
+ggdag_ov <- dagify(Y ~ Z,
+                   X ~ Z,
+                   exposure = "X",
+                   outcome = "Y") %>%
+  tidy_dagitty(layout = "tree")
+
+# d-connection
+dp1 <- ggdag_ov %>%
+  ggdag_dconnected() + labs(title = "Omitted variable confounding")
+
+
+# adjustment set
+dp2 <-
+  ggdag::ggdag_adjustment_set(ggdag_ov) + labs(title = "Adjustment set to avoid omitted variable onfounding")
+
+# figure
+fig1 <-
+  dp1 + dp2 + plot_annotation(tag_levels = 'a')# + plot_layout(guides = 'collect')
+
+# graph figure
+fig1 
 ```
 
 We can simulate date that have this causal relationship and ask what would happen were we to regress X on Y without accounting for Z. 
 
 ```{r}
+# simulate ommitted variable bias
 set.seed(123)
 N <- 100
 z <- rnorm(N)# sim z
@@ -121,56 +156,142 @@ X and Y are correlated. If we know X we can better predict Y. However our abilit
 
 To understand the implications of information flow with in a regression model we may use directed acylical graphs or DAGS
 
-
-
-### Omitted variable DAG
-
-Let's use `ggdag` to identify confounding arising from omitting Z in our regression of X on Y.
-
-First we write out the DAG as follows:
-
-```{r}
-# code for creating a DAG
-ggdag_ov <- dagify(y ~ z,
-                       x ~ z,
-                       exposure = "x",
-                       outcome = "y") %>%
-  tidy_dagitty(layout = "tree")
-
-# plot the DAG
-ggdag_ov %>%
-  ggdag() + labs(title = "Omitted variable DAG")
-```
-
-Next we ask `ggdag` which variables we need to include if we are to obtain an unbiased estimate of the outcome from the exposure:
-
-```{r}
-# use this code
-
-ggdag::ggdag_adjustment_set( ggdag_ov )
-
-```
-
-The graph tells us to obtain an unbiased estimate of Y on X we must condition on Z.
+Figure 2b tells us to obtain an unbiased estimate of Y on X we must condition on Z.
 
 And indeed, when we included the omitted variable Z in our simulated dateset it breaks the association between X and Y:
 
 ```{r}
 m1 <- lm(y ~ x + z, data = df)
 
-parameters::model_parameters(m1)
+parameters::model_parameters(m1) %>%
+  print_html()
 ```
 
-## Confounding controls
+##  Post-treatment confounding
 
 Many applied scientists equate omitted variable bias with confounding.  For this reason, they seek to "control" for every variable that might be associated with both X and Y.  If the relationship between X and Y holds after including such "controls," many applied scientist will infer that there is a causal relationship between X and Y.  We will see that this is not the case; quite the opposite, controlling for many variables is an invitation to confounding, leading to erroneous causal inference.  Do not adopt a "causal salad" approach to regression.
 
 > “But the approach which dominates in many parts of biology and the social sciences is instead CAUSAL SALAD. Causal salad means tossing various “control” variables into a statistical model, observing changes in estimates, and then telling a story about causation. Causal salad seems founded on the notion that only omitted variables can mislead us about causation. But included variables can just as easily confound us. When tossing a causal salad, a model that makes good predictions may still mislead about causation. If we use the model to plan an intervention, it will get everything wrong. Richard McElreath “Statistical Rethinking" Chapter 1, p46.
 
+Suppose we are interested in the effect of X on Y in a scenario when Z fully mediates the relationship of X on Y.
 
-##  Post-treatment confounding
+```{r}
+# medation model -- full mediation
+dag_1 <- dagify(Y ~ Z,
+                Z ~ X,
+                exposure = "X",
+                outcome = "Y") %>%
+  tidy_dagitty(layout = "tree")
+
+dag_1 %>%
+  ggdag()
+
+pdm <-
+  ggdag::ggdag_dconnected(dag_1) + labs(title = "Y ~ X (no Z)")
+pdm2 <-
+  ggdag::ggdag_dconnected(dag_1, controlling_for = "Z") + labs(title = "Y ~ X + Z")
+pdm3 <- ggdag::ggdag_adjustment_set(dag_1, exposure = "X",
+                                    outcome = "Y") + labs(title = "Do not condition on Z!")
+
+
+# figure
+fig2 <-
+  pdm + pdm2 + pdm3 + plot_annotation(tag_levels = 'a',
+                                      title = "Post-treatment confounding",
+                                      subtitle = "When the causal effect of x on y is fully mediated, controlling for a mediator will block the path between x and y")  #+ plot_layout(guides = 'collect')
+
+# graph
+fig2
+
+# fig2 16x 12
+
+# practical example, not run
+# dm<- dagify( 
+#        y ~ m,
+#        m ~ x, 
+#        labels = c("y" = "Satisfaction with life", 
+#                   "m" = "Friendships",
+#                   "x" = "Religious Service")
+#        )
+#   
+#        
+# pdm <- ggdag(dm, text = FALSE, from = "x",
+#                    to = "y", use_labels = "label") %>%
+#   ggd
+# 
+# pdm2 <- ggdag_dseparated(dm, 
+#                          from = "x",
+#                    to = "y",
+#                    controlling_for = "m",text = FALSE, use_labels = "label")
+# 
+# pdm3 <- ggdag_adjustment_set(dm, 
+#                          exposure  = "x",
+#                    outcome = "y",text = FALSE, use_labels = "label")
+
+```
+
+What variables do we need to include to obtain an unbiased estimate of X on Y?
+
+Let's fill out this example out by imagining an experiment. 
+
+Suppose we want to know whether a ritual action condition (X) influences charity (Y). We have good reason to assume the effect of X on Y happens *entirely* through perceived social cohesion (M):  
+
+X$\to$M$\to$Z or 
+ritual $\to$ social cohesion $\to$ charity
+
+Lets simulate some data
+
+```{r}
+set.seed(123)
+# Participants
+N <- 100
+
+# initial charitable giving
+c0 <- rnorm(N , 10 , 2)
+
+# assign treatments and simulate charitable giving and increase in social cohesion
+ritual <- rep(0:1 , each = N / 2)
+cohesion <- ritual * rnorm(N, .5, .2)
+
+# increase in charity
+c1 <- c0 + ritual * cohesion
+
+# dataframe
+d <- data.frame(
+  c0 = c0 ,
+  c1 = c1 ,
+  ritual = ritual ,
+  cohesion = cohesion
+)
+
+# this code is handy from the rethinking package
+rethinking::precis(d)
+```
+
+Does the ritual increase charity?
+
+If we only include the ritual condition in the model, we find that ritual condition reliable predicts increases in charitable giving:
+
+```{r}
+parameters::model_parameters(lm(c1 ~  c0 + ritual, data = d)) %>% print_html()
+```
+
+Does the ritual increase charity adjusting for levels of social cohesion?
+
+```{r}
+parameters::model_parameters(lm(c1 ~  c0 + ritual + cohesion, data = d)) %>% print_html()
+```
+
+The answer is that the (direct) effect of ritual entirely drops out when we include both ritual and social cohesion. Why is this? The answer is that once our model knows `m` it does not obtain any new information by knowing `x`.
+
+If we were interested in assessing x$\to$y but x were to effect y through m (i.e x$\to$m$\to$y) then conditioning on m would **block the path** from x$\to$y. Including m leads to **Pipe Confounding**.
+
+In experiments we should never condition on a post-treatment variable.
+
 
 ### Mediation and causation
+
+## Mediation and causation
 
 Suppose we were interested in the causal effect of X on Y.  We have a direct effect of X on Y as well as an indirect effect of X on Y through M. We use `ggdag` to draw the DAG:
 
@@ -193,11 +314,11 @@ We can pose the question to `ggdag`:
 ```{r}
 # ask ggdag which variables to condition on:
 
-ggdag::ggdag_adjustment_set( dag_1 )
+ggdag::ggdag_adjustment_set(dag_1)
 
 ```
 
-'Backdoor Paths Unconditionally Closed' means that, assuming the DAG we have drawn is correct, we may obtain an unbiased estimate for the total effect of X on Y without including additional variables. 
+'Backdoor Paths Unconditionally Closed' means that, assuming the DAG we have drawn is correct, we may obtain an unbiased estimate of X on Y without including additional variables. 
 
 Later we shall understand why this is the case.^[We shall see there is no "backdoor path" from X to Y that would bias our estimate, hence the estimate X->Y is an unbiased causal estimate -- again, conditional on our DAG.]
 
@@ -207,7 +328,7 @@ Two variables are `d-connected` if information flows between them (condional on 
 
 ```{r}
 # use this code to examine d-connectedness
-ggdag::ggdag_dconnected( dag_1 )
+ggdag::ggdag_dconnected(dag_1)
 ```
 
 In this case, d-connection is a good thing because we can estimate the causal effect of X on Y. In other cases, d-connection will spoil the model. We have seen this for omitted variable bias. X and Y are d-separated conditional on Z, and that's our motivation for including Z! These concepts are tricky, but they get easier with practice. 
@@ -233,7 +354,7 @@ First we ask, is X is related to Y?
 
 ```{r}
 m2 <- lm(y ~ x_s, data = df2)
-parameters::model_parameters(m2)%>% print_html()
+parameters::model_parameters(m2)
 ```
 
 Yes.
@@ -247,7 +368,8 @@ parameters::model_parameters(m2) %>% print_html()
 
 Yes, but notice this is a different question. The effect of X is attenuated because M contributes to the causal effect of Y. 
 
-A mediation model would tell us the same. Using the BRMS package in R, we can write mediation model as follows:
+A mediation model would tell us the same. Recall from lecture 9 we can write a mediation model as follows:
+
 
 
 ```{r}
@@ -278,14 +400,14 @@ For a mediation model we may recover the indirect, direct and total effects as f
 post <- brms::posterior_samples(m1)
 
 # sum and multiply the posterior distributions to obain parameter estimates
-post2 <- post %>% 
+post2 <- post %>%
   transmute(
     a = b_ms_x_s ,
     b = b_y_m_s,
     cp = b_y_x_s,
     me = a * b,
     c = cp + me#,
-   # pme = me / c
+    # pme = me / c
   )
 
 # plot the results
@@ -295,106 +417,6 @@ mcmc_intervals(post2)
 So we can ask how X affects Y  in relation to X's effect on M. 
 
 However, to obtain an unbiased causal estimate of X on Y we only needed to include X We didn't need to condition on M to estimate the *causal* effect of X.
-
-### Pipe counfounding
-
-Suppose we are interested in the effect of x on y, in a scenario when m fully mediates the relationship of x on y.
-
-```{r}
-# dm <- mediation_triangle(
-#   x = NULL,
-#   y = NULL,
-#   m = NULL,
-#   x_y_associated = FALSE,
-#     edge_type = "link_arc") %>%
-#   ggdag()
-# # dm
-
-dm<- dagify( 
-       y ~ m,
-       m ~ x, 
-       labels = c("y" = "Satisfaction with life", 
-                  "m" = "Friendships",
-                  "x" = "Religious Service")
-       )
-  
-       
-pdm <- ggdag(dm, text = FALSE, from = "x",
-                   to = "y", use_labels = "label")
-
-pdm
-pdm2 <- ggdag_dseparated(dm, 
-                         from = "x",
-                   to = "y",
-                   controlling_for = "m",text = FALSE, use_labels = "label")
-
-library(patchwork)
-p2 <- pdm + pdm2 + plot_annotation(tag_levels = 'a', title = "Post-treatment confounding", subtitle = "When the causal effect of x on y is fully mediated, controlling for a mediator will block the path between x and y")
-p2 
-
-# fig2 
-
-```
-
-What variables do we need to include to obtain an unbiased estimate of X on Y?
-
-Let's fill out this example out by imagining an experiment. 
-
-Suppose we want to know whether a ritual action condition (X) influences charity (Y). We have good reason to assume the effect of X on Y happens *entirely* through perceived social cohesion (M):  
-
-X$\to$M$\to$Z or 
-ritual $\to$ social cohesion $\to$ charity
-
-Lets simulate some data
-
-```{r}
-set.seed(123)
-# Participants
-N <-100
-
-# initial charitable giving
-c0 <- rnorm(N ,10 ,2)
-
-# assign treatments and simulate charitable giving and increase in social cohesion
-ritual <- rep( 0:1 , each = N/2 )
-cohesion <- ritual * rnorm(N,.5,.2)
-
-# increase in charity
-c1 <- c0 + ritual * cohesion 
-
-# dataframe
-d <- data.frame( c0 = c0 , 
-                 c1=c1 , 
-                 ritual = ritual , 
-                 cohesion = cohesion )
-
-# this code is handy from the rethinking package
-rethinking::precis(d)
-```
-
-Does the ritual increase charity?
-
-If we only include the ritual condition in the model, we find that ritual condition reliable predicts increases in charitable giving:
-
-```{r}
-parameters::model_parameters(
-  lm(c1 ~  c0 + ritual, data = d)
-  )
-```
-
-Does the ritual increase charity adjusting for levels of social cohesion?
-
-```{r}
-parameters::model_parameters(
-  lm(c1 ~  c0 + ritual + cohesion, data = d)
-  )
-```
-
-The answer is that the (direct) effect of ritual entirely drops out when we include both ritual and social cohesion. Why is this? The answer is that once our model knows `m` it does not obtain any new information by knowing `x`.
-
-If we were interested in assessing x$\to$y but x were to effect y through m (i.e x$\to$m$\to$y) then conditioning on m would **block the path** from x$\to$y. Including m leads to **Pipe Confounding**.
-
-In experiments we should never condition on a post-treatment variable.
 
 ### Masked relationships
 
@@ -412,7 +434,7 @@ dag_m1 <- dagify(K ~ C + R,
   tidy_dagitty(layout = "tree")
 
 # graph
-dag_m1%>%
+dag_m1 %>%
   ggdag()
 ```
 
@@ -423,19 +445,17 @@ We can simulate the data:
 # C -> R
 set.seed(123)
 n <- 100
-C <- rnorm( n )
-R <- rnorm( n , C )
-K <- rnorm( n , R - C )
+C <- rnorm(n)
+R <- rnorm(n , C)
+K <- rnorm(n , R - C)
 
-d_sim <- data.frame(K=K,R=R,C=C)
+d_sim <- data.frame(K = K, R = R, C = C)
 ```
 
 First we only condition on conservatism
 
 ```{r}
-ms1 <- parameters::model_parameters(
-  lm(K  ~ C, data = d_sim)
-)
+ms1 <- parameters::model_parameters(lm(K  ~ C, data = d_sim))
 plot(ms1)
 ms1
 ```
@@ -443,18 +463,14 @@ ms1
 Next, only religion:
 
 ```{r}
-ms2<- parameters::model_parameters(
-  lm(K  ~ R, data = d_sim)
-)
+ms2 <- parameters::model_parameters(lm(K  ~ R, data = d_sim))
 plot(ms2)
 ```
 
 When we add both C and R, we see them "pop" in opposite directions, as is typical of masking:
 
 ```{r}
-ms3<- parameters::model_parameters(
-  lm(K  ~ C + R, data = d_sim)
-)
+ms3 <- parameters::model_parameters(lm(K  ~ C + R, data = d_sim))
 plot(ms3)
 ```
 
@@ -467,7 +483,7 @@ path_y <- brms::bf(K ~ C + R)
 m2 <- brms::brm(
   path_m + path_y + set_rescor(FALSE),
   data = d_sim,
-  file = here::here("models","mediation-lect11-2")
+  file = here::here("models", "mediation-lect11-2")
 )
 
 # parameters::model_parameters(m2)%>%
@@ -486,14 +502,14 @@ We recover the indirect, direct and total effects as follows:
 
 ```{r}
 post <- brms::posterior_samples(m2)
-post2 <- post %>% 
+post2 <- post %>%
   transmute(
     a = b_R_C ,
     b = b_K_R,
     cp = b_K_C,
     me = a * b,
     c = cp + me #,
-  #  pme = me / c
+    #  pme = me / c
   )
 mcmc_intervals(post2)
 ```
@@ -501,7 +517,7 @@ mcmc_intervals(post2)
 Note that when you ask `ggdag` to assess how to obtain an unbiased estimate of C on K it will tell you you don't need to condition on R.
 
 ```{r}
-dag_m1%>%
+dag_m1 %>%
   ggdag_adjustment_set()
 ```
 
@@ -521,12 +537,74 @@ No. The fact that C$\to$R is positive and R$\to$K is negative means that if we w
 Collider confounding occurs when we condition on a common effect of x and y.
 
 ```{r}
-p3 <- collider_triangle() %>% 
-  ggdag_dseparated(controlling_for = "m") 
 
-p3 + labs(title = "Collider confounding")
+dag_3 <- dagify(Z ~ Y,
+                Z ~ X,
+                exposure = "X",
+                outcome = "Y") %>%
+  tidy_dagitty(layout = "fr")
+dag_3 %>%
+  ggdag()
+
+
+dag_3 %>%
+  ggdag()
+
+ddm <- ggdag::ggdag_dconnected( dag_3 ) + labs(title= "Y ~ X (no Z)")
+ddm2 <- ggdag::ggdag_dconnected( dag_3, controlling_for = "Z") + labs(title= "Y ~ X + Z")
+ddm3 <- ggdag::ggdag_adjustment_set(dag_3, exposure = "X", 
+                            outcome = "Y") + labs(title= "Do not condition on Z!")
+
+
+
+# Collider bias in experiments
+
+
+library(ggdag)
+dg_suz <- ggdag::dagify(
+  b ~  im + ordr + rel + sr + edu +  st + cny,
+  rel ~  age + ses + edu + male + cny,
+  ses ~ cny + edu + age,
+  edu ~ cny + male + age,
+  im ~ mem + rel + cny + sr + edu,
+  mem ~ age + edu + ordr,
+  exposure = "sr",
+  outcome = "b",
+  labels = c(
+    "b" = "statement credibility",
+    "sr" = "source",
+    "st" = "statement",
+    "im" = "importance of statement",
+    "mem" = "memory of statement",
+    "s" = "source of statement",
+    "rel" = "participant's religiosity",
+    "cny" = "participant's country",
+    "mem" = "memory of statement",
+    "male" = "male",
+    "ordr" = "presentation order",
+    "ses" = "perceived social economic status",
+    "edu" = "education",
+    "age" = "age"
+  )
+) %>%
+  control_for("rel")
+
+dd4 <- ggdag::ggdag_collider(dg_suz, text = FALSE, use_labels = "label") + labs(title = "Colliders in experiment", "subtitle" = "Experimental control variables may induce collider bias from their causal relationships with each other.")
+                                                                
+dd5 <- ggdag::ggdag_adjustment_set(dg_suz, exposure = "rel", outcome = "b", text = FALSE, use_labels = "label") + labs(title = "Adjustment sets to block backdoorpaths", subtitle = "Two adjustment sets available to estimate source on credibility stratifying by religion.")
+                                    
+dd5 + labs(title = "Adjustment set", subtitle = "To estimate the causal effect of source on statemetn credibility only condition on religion and country.")                                                            
+                                                                
+# figure
+
+
+fig3 <-(ddm + ddm2 + ddm3)/(dd4 + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias")# + plot_layout(guides = 'collect')
+
+# graph
+fig3 # 16 x 16
+
 ```
-
+ 
 Richard McElreath describes the selection-distortion effect (Berkson's paradox) as an example of Collider Confounding [@mcelreath2020].
 
 Imagine in science there is no relationship between the newsworthiness of science and its trustworthiness. Imagine further that selection committees make decisions on the basis of the both newsworthiness and the trustworthiness of scientific proposals.
@@ -576,7 +654,7 @@ https://github.com/ASKurz/Statistical_Rethinking_with_brms_ggplot2_and_the_tidyv
 And his book is here:
 https://bookdown.org/ajkurz/Statistical_Rethinking_recoded/ 
 
-I have only slightedly modified his code. 
+I have slightedly modified this code. 
 
 First, we simulate uncorrelated variables and a process of selection for sub-populations score high on both indicators.
 
@@ -604,9 +682,9 @@ Next filter out the high scoring examples, and assess their correlation.
 Note that the act of selection *induces* a correlation within our dataset.
 
 ```{r}
-d %>% 
-  filter(selected == TRUE) %>% 
-  select(newsworthiness, trustworthiness) %>% 
+d %>%
+  filter(selected == TRUE) %>%
+  select(newsworthiness, trustworthiness) %>%
   cor()
 ```
 
@@ -691,11 +769,11 @@ dag_ex2 <- dagify(
   outcome = "C1",
   latent = "U"
 ) %>%
-  control_for(c("Ch","C0"))  
+  control_for(c("Ch", "C0"))
 
 dag_ex2 %>%
-  ggdag( text = FALSE,
-    use_labels = "label")
+  ggdag(text = FALSE,
+        use_labels = "label")
 ```
 
 How do we avoid collider bias here?
@@ -704,10 +782,8 @@ Note what happens if we condition on cohesion?
 
 ```{r}
 dag_ex2 %>%
-  ggdag_collider(
-    text = FALSE,
-    use_labels = "label"
-  )  +
+  ggdag_collider(text = FALSE,
+                 use_labels = "label")  +
   ggtitle("Cohesion is a collider that opens a path from ritual to charity")
 ```
 
@@ -778,17 +854,26 @@ dag_sd <- dagify(
   Z ~ Y,
   D ~ Z,
   labels = c(
-    "Z" = "Collider",
-    "D" = "Descendant",
-    "X" = "X",
-    "Y" = "Y"
+    "Z" = "Collider (e.g. Distress)",
+    "D" = "Descendant (e.g. Friends)",
+    "X" = "Exposure (e.g. Religion)",
+    "Y" = "Outcome (e.g. Meaning)"
   ),
   exposure = "X",
   outcome = "Y"
 ) %>%
   control_for("D") 
 
-dag_sd %>%
+
+
+
+ds1 <- ggdag::ggdag_dconnected(dag_sd  , text = FALSE,
+                               use_labels = "label") + labs(title = "Meaning ~ Religion")
+ds1
+
+
+
+ds2 <- dag_sd %>%
   ggdag_dseparated(
     from = "X",
     to = "Y",
@@ -796,8 +881,45 @@ dag_sd %>%
     text = FALSE,
     use_labels = "label"
   )  +
-  ggtitle("X --> Y, controlling for D",
-          subtitle = "D induces collider bias")
+  ggtitle("Meaning ~ Religion, controlling for Friends",
+          subtitle = "Friends induces collider bias because it is a descendent of Distress")
+
+
+ds2
+
+dgg <- dagify(
+  Z ~ X,
+  Z ~ Y,
+  D ~ Z,
+  labels = c(
+    "Z" = "Collider (e.g. Distress)",
+    "D" = "Descendant (e.g. Friends)",
+    "X" = "Exposure (e.g. Religion)",
+    "Y" = "Outcome (e.g. Meaning)"
+  ),
+  exposure = "X",
+  outcome = "Y"
+)
+
+ds3 <- ggdag::ggdag_adjustment_set(dgg,
+                                   text = FALSE,
+                                   use_labels = "label",) + labs(title = "Do not condition on Friends!")
+
+ds3
+
+
+
+library(patchwork)
+
+fig4 <-
+  ds1 + ds2 + ds3 + plot_annotation(tag_levels = 'a',
+                                    title = "Descendent confounding",
+                                    subtitle = "Do not condition on the descendent of a collider")  #+ plot_layout(guides = 'collect')
+
+# graph figure
+fig4 
+
+
 ```
 
 
@@ -865,8 +987,8 @@ Once we condition on Z, the link between X and Y is broken.
 ```{r}
 # we can use the language of conditional independence
 library(dagitty)
-g <- dagitty( "dag{ x <- z -> y }" )
-impliedConditionalIndependencies( g )
+g <- dagitty("dag{ x <- z -> y }")
+impliedConditionalIndependencies(g)
 ```
 
 We can use implied conditional independencies to test whether our DAG is right. For example, if X were to remain reliably predictive of Y, then we would know that the DAG we have drawn here is not correct. 
