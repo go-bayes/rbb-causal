@@ -84,7 +84,7 @@ theme_set(theme_classic())
 A directed acyclical graph (DAG) is a heuristic tools for investigating causal inference in a regression model. A DAG is a graph that has nodes and edges. The edges point in the direction of a causal influence. The flows are "acyclical" because a cause is not at the same time an effect. 
 
 The `ggdag` package in R is useful for identifying potential confounding in your dataset.
-
+YE
 **Importantly: assessing causal inference using a DAG typically requires assumptions that are *not* part of your dataset. A poorly specified DAG will lead to poor inference. There is _no_ working around this.**
 
 
@@ -115,19 +115,36 @@ ggdag_ov <- dagify(Y ~ Z,
 
 # d-connection
 dp1 <- ggdag_ov %>%
-  ggdag_dconnected() + labs(title = "Omitted variable confounding")
+  ggdag_dconnected(from = "X", to = "Y", controlling_for = c("X")) + labs(title = "Omitted variable confounding")
 
 
-# adjustment set
-dp2 <-
-  ggdag::ggdag_adjustment_set(ggdag_ov) + labs(title = "Adjustment set to avoid omitted variable onfounding")
+
+d1 <- dagify(Y ~ Z,
+             X ~ Z,
+             exposure = "X",
+             outcome = "Y") %>%
+  tidy_dagitty(layout = "tree") %>%
+  ggdag_dseparated(node_size = 16, from = "X", to = "Y") + labs(title = "Omitted variable\n confounding")
+
+
+d2 <- dagify(Y ~ Z,
+             X ~ Z,
+             exposure = "X",
+             outcome = "Y") %>%
+  tidy_dagitty(layout = "tree") %>%
+  ggdag_dseparated(controlling_for = "Z"), node_size = 16) + labs(title = "Adding Z \nremoves confounding")
+
+# # adjustment set
+# dp2 <-
+#   ggdag::ggdag_adjustment_set(ggdag_ov) + labs(title = "Adjustment set to avoid omitted variable onfounding")
 
 # figure
+library(patchwork)
 fig1 <-
-  dp1 + dp2 + plot_annotation(tag_levels = 'a')# + plot_layout(guides = 'collect')
+  d1 + d2 + plot_annotation(tag_levels = 'a') + plot_layout(guides = 'collect')
 
 # graph figure
-fig1 
+fig1 # 8 * 6
 ```
 
 We can simulate date that have this causal relationship and ask what would happen were we to regress X on Y without accounting for Z. 
@@ -187,23 +204,26 @@ dag_1 %>%
   ggdag()
 
 pdm <-
-  ggdag::ggdag_dconnected(dag_1) + labs(title = "Y ~ X (no Z)")
-pdm2 <-
-  ggdag::ggdag_dconnected(dag_1, controlling_for = "Z") + labs(title = "Y ~ X + Z")
-pdm3 <- ggdag::ggdag_adjustment_set(dag_1, exposure = "X",
-                                    outcome = "Y") + labs(title = "Do not condition on Z!")
+  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y", controlling_for = "X") + labs(title = "Y ~ X (no Z)")
 
+
+pdm2 <-
+  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y", controlling_for = c("X","Z")) + labs(title = "Y ~ X + Z", subtitle = "Adding Z blocks X->Y, do not condition on Z!")
+
+# pdm3 <- ggdag::ggdag_adjustment_set(dag_1, exposure = "X",
+#                                     outcome = "Y") + labs(title = "Do not condition on Z!")
+pdm2
 
 # figure
 fig2 <-
-  pdm + pdm2 + pdm3 + plot_annotation(tag_levels = 'a',
+  pdm + pdm2  + plot_annotation(tag_levels = 'a',
                                       title = "Post-treatment confounding",
-                                      subtitle = "When the causal effect of x on y is fully mediated, controlling for a mediator will block the path between x and y")  #+ plot_layout(guides = 'collect')
+                                      subtitle = "When the causal effect of x on y is fully mediated, \ncontrolling for a mediator will block the path between x and y")  + plot_layout(guides = 'collect')
 
 # graph
 fig2
 
-# fig2 16x 12
+# fig2 8 * 6
 
 # practical example, not run
 # dm<- dagify( 
@@ -551,9 +571,12 @@ dag_3 %>%
   ggdag()
 
 ddm <- ggdag::ggdag_dconnected( dag_3 ) + labs(title= "Y ~ X (no Z)")
-ddm2 <- ggdag::ggdag_dconnected( dag_3, controlling_for = "Z") + labs(title= "Y ~ X + Z")
-ddm3 <- ggdag::ggdag_adjustment_set(dag_3, exposure = "X", 
-                            outcome = "Y") + labs(title= "Do not condition on Z!")
+
+ddm2 <- ggdag::ggdag_dconnected( dag_3, controlling_for = "Z") + labs(title = "Y ~ X + Z", subtitle = "Adding Z opens X->Y")
+
+
+# ddm3 <- ggdag::ggdag_adjustment_set(dag_3, exposure = "X", 
+#                             outcome = "Y") + labs(title= "Do not condition on Z!")
 
 
 
@@ -571,38 +594,58 @@ dg_suz <- ggdag::dagify(
   exposure = "sr",
   outcome = "b",
   labels = c(
-    "b" = "statement credibility",
-    "sr" = "source",
+    "b" = "statement credibility\n(outcome)",
+    "sr" = "source\n(exposure)",
     "st" = "statement",
-    "im" = "importance of statement",
-    "mem" = "memory of statement",
-    "s" = "source of statement",
-    "rel" = "participant's religiosity",
-    "cny" = "participant's country",
-    "mem" = "memory of statement",
+    "im" = "statement importance",
+    "mem" = "statement memory",
+    "rel" = "religiosity",
+    "cny" = "country",
     "male" = "male",
-    "ordr" = "presentation order",
-    "ses" = "perceived social economic status",
+    "ordr" = "order",
+    "ses" = "perceived SES",
     "edu" = "education",
     "age" = "age"
   )
 ) %>%
   control_for("rel")
 
-dd4 <- ggdag::ggdag_collider(dg_suz, text = FALSE, use_labels = "label") + labs(title = "Colliders in experiment", "subtitle" = "Experimental control variables may induce collider bias from their causal relationships with each other.")
-                                                                
-dd5 <- ggdag::ggdag_adjustment_set(dg_suz, exposure = "rel", outcome = "b", text = FALSE, use_labels = "label") + labs(title = "Adjustment sets to block backdoorpaths", subtitle = "Two adjustment sets available to estimate source on credibility stratifying by religion.")
-                                    
-dd5 + labs(title = "Adjustment set", subtitle = "To estimate the causal effect of source on statemetn credibility only condition on religion and country.")                                                            
+text_size <- 40
+dd4 <- ggdag::ggdag_collider(dg_suz, text = FALSE, use_labels = "label", node_size = 10, label_size = 10) +  
+  #geom_dag_text(size = 18) +
+ # geom_dag_node(size = 40) +
+  geom_dag_collider_edges(
+  size = 0.6 #,
+  # curvature = 0.5,
+  # angle = 90,
+  # ncp = 5,
+  # arrow = NULL,
+  # lineend = "butt",
+  # na.rm = FALSE,
+  # show.legend = NA,
+  # inherit.aes = TRUE
+) +
+  labs(title = "Colliders in experiment")
+                                                        
+dd5 <- ggdag::ggdag_adjustment_set(dg_suz, exposure = "rel", outcome = "b", text = FALSE, use_labels = "label", node_size = 10, label_size = 10)  + labs(title = "Adjustment sets")                                                            
                                                                 
 # figure
 
 
-fig3 <-(ddm + ddm2 + ddm3)/(dd4 + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias")# + plot_layout(guides = 'collect')
+fig3a <-(ddm + ddm2)+ plot_annotation(tag_levels = 'a', title = "Collider Bias") + plot_layout(guides = 'collect')
 
-# graph
-fig3 # 16 x 16
+fig3a # 8 x 6
 
+fig3b <- (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias in Experiments") + plot_layout(guides = 'collect')
+
+fig3b # 12 * 12
+
+
+fig3 <- (ddm + ddm2 )/ (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias") + plot_layout(guides = 'collect')
+
+fig3 # 12 X16)
+
+# subtitle = "Experimental control variables may induce collider bias.\nOnly a subset of experimental controls are required \nto close backdoor paths."
 ```
  
 Richard McElreath describes the selection-distortion effect (Berkson's paradox) as an example of Collider Confounding [@mcelreath2020].
@@ -854,10 +897,10 @@ dag_sd <- dagify(
   Z ~ Y,
   D ~ Z,
   labels = c(
-    "Z" = "Collider (e.g. Distress)",
-    "D" = "Descendant (e.g. Friends)",
-    "X" = "Exposure (e.g. Religion)",
-    "Y" = "Outcome (e.g. Meaning)"
+    "Z" = "Distress",
+    "D" = "Friends",
+    "X" = "Religion",
+    "Y" = "Meaning"
   ),
   exposure = "X",
   outcome = "Y"
@@ -882,7 +925,7 @@ ds2 <- dag_sd %>%
     use_labels = "label"
   )  +
   ggtitle("Meaning ~ Religion, controlling for Friends",
-          subtitle = "Friends induces collider bias because it is a descendent of Distress")
+          subtitle = "Conditioning on a descendent induces collider bias")
 
 
 ds2
@@ -892,10 +935,10 @@ dgg <- dagify(
   Z ~ Y,
   D ~ Z,
   labels = c(
-    "Z" = "Collider (e.g. Distress)",
-    "D" = "Descendant (e.g. Friends)",
-    "X" = "Exposure (e.g. Religion)",
-    "Y" = "Outcome (e.g. Meaning)"
+    "Z" = "Distress",
+    "D" = "Friends",
+    "X" = "Religion",
+    "Y" = "Meaning"
   ),
   exposure = "X",
   outcome = "Y"
@@ -903,7 +946,7 @@ dgg <- dagify(
 
 ds3 <- ggdag::ggdag_adjustment_set(dgg,
                                    text = FALSE,
-                                   use_labels = "label",) + labs(title = "Do not condition on Friends!")
+                                   use_labels = "label") + labs(title = "Do not condition on Friends!")
 
 ds3
 
@@ -912,12 +955,12 @@ ds3
 library(patchwork)
 
 fig4 <-
-  ds1 + ds2 + ds3 + plot_annotation(tag_levels = 'a',
-                                    title = "Descendent confounding",
-                                    subtitle = "Do not condition on the descendent of a collider")  #+ plot_layout(guides = 'collect')
+  ds1 + ds2  + plot_annotation(tag_levels = 'a',
+                                    title = "Descendent confounding")  + plot_layout(guides = 'collect')
 
 # graph figure
-fig4 
+fig4 # 8 x 6
+
 
 
 ```
