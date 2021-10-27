@@ -115,7 +115,7 @@ ggdag_ov <- dagify(Y ~ Z,
 
 # d-connection
 dp1 <- ggdag_ov %>%
-  ggdag_dconnected(from = "X", to = "Y", controlling_for = c("X")) + labs(title = "Omitted variable confounding")
+  ggdag_dconnected(from = "X", to = "Y") + labs(title = "Omitted variable confounding")
 
 
 
@@ -132,7 +132,7 @@ d2 <- dagify(Y ~ Z,
              exposure = "X",
              outcome = "Y") %>%
   tidy_dagitty(layout = "tree") %>%
-  ggdag_dseparated(controlling_for = "Z"), node_size = 16) + labs(title = "Adding Z \nremoves confounding")
+  ggdag_dseparated(controlling_for = "Z", node_size = 16) + labs(title = "Adding Z \nremoves confounding")
 
 # # adjustment set
 # dp2 <-
@@ -204,7 +204,7 @@ dag_1 %>%
   ggdag()
 
 pdm <-
-  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y", controlling_for = "X") + labs(title = "Y ~ X (no Z)")
+  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y") + labs(title = "Y ~ X (no Z)")
 
 
 pdm2 <-
@@ -924,7 +924,7 @@ ds2 <- dag_sd %>%
     text = FALSE,
     use_labels = "label"
   )  +
-  ggtitle("Meaning ~ Religion, controlling for Friends",
+  ggtitle("Meaning ~ Religion + Friends",
           subtitle = "Conditioning on a descendent induces collider bias")
 
 
@@ -959,7 +959,7 @@ fig4 <-
                                     title = "Descendent confounding")  + plot_layout(guides = 'collect')
 
 # graph figure
-fig4 # 8 x 6
+ # 8 x 6
 
 
 
