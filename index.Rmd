@@ -1,5 +1,5 @@
 ---
-title: "Causal confounding and causal inference: advice to authors"
+title: "Causal inference: advice to authors"
 description: ""
 author:
   - name: Joseph Bulbulia
@@ -50,7 +50,7 @@ packages <- c(
   "patchwork",
   "tidyverse",
   "brms",
-  "rstan"
+  "rstan",
   "rstanarm",
   "bayesplot",
   "easystats",
@@ -84,7 +84,7 @@ theme_set(theme_classic())
 A directed acyclical graph (DAG) is a heuristic tools for investigating causal inference in a regression model. A DAG is a graph that has nodes and edges. The edges point in the direction of a causal influence. The flows are "acyclical" because a cause is not at the same time an effect. 
 
 The `ggdag` package in R is useful for identifying potential confounding in your dataset.
-YE
+
 **Importantly: assessing causal inference using a DAG typically requires assumptions that are *not* part of your dataset. A poorly specified DAG will lead to poor inference. There is _no_ working around this.**
 
 
@@ -93,7 +93,7 @@ YE
 
 Often when researchers include additional co-variates into their regression into their regression model they are worried about confounding from omitted variable bias. 
 
-They use the word "control" to indicate that they are addressing this hazard.  The case is familiar.  X and Y are uncorrelated. However a lurking third variable is responsible for their apparent correlation.  \@ref(fig:omitvar) graphs ommitted variable bias.
+They use the word "control" to indicate that they are addressing this hazard.  The case is familiar.  X and Y are uncorrelated. However a lurking third variable is responsible for their apparent correlation.  \@ref(fig:omitvar) graphs omitted variable bias.
 
 
 ```{r omitvar, fig.cap="Ommitted variable bias occurs when a third variable, z, causes x and y to share information"}
@@ -147,6 +147,8 @@ fig1 <-
 fig1 # 8 * 6
 ```
 
+### Simulation of omitted variable confounding
+
 We can simulate date that have this causal relationship and ask what would happen were we to regress X on Y without accounting for Z. 
 
 ```{r}
@@ -166,7 +168,8 @@ Regressing X on Y:
 
 ```{r}
 m0 <- lm(y ~ x, data = df)
-parameters::model_parameters(m0)
+parameters::model_parameters(m0) %>%
+  print_html()
 ```
 
 X and Y are correlated. If we know X we can better predict Y. However our ability to predict arises from a process outside of X and Y. Put metaphorically,  X "listens to" Z and Y "listens to" Z because Z influences both X and Y. If Z were to change, then so too would X and so too would Y. However X does not cause Y. If we were to intervene in the world and change X this would not change Y. Put yet another way, once we know Z, we do not gain any additional information about Y from X. 
@@ -194,31 +197,34 @@ Suppose we are interested in the effect of X on Y in a scenario when Z fully med
 
 ```{r}
 # medation model -- full mediation
+library(ggdag)
 dag_1 <- dagify(Y ~ Z,
                 Z ~ X,
                 exposure = "X",
                 outcome = "Y") %>%
   tidy_dagitty(layout = "tree")
 
-dag_1 %>%
-  ggdag()
+# dag_1 %>%
+#   ggdag()
 
 pdm <-
-  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y") + labs(title = "Y ~ X (no Z)")
+  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y") + labs(title = "Y ~ X") + theme_dag_blank()
 
 
 pdm2 <-
-  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y", controlling_for = c("X","Z")) + labs(title = "Y ~ X + Z", subtitle = "Adding Z blocks X->Y, do not condition on Z!")
+  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y", controlling_for = c("Z")) + labs(title = "Y ~ X + Z", subtitle = "Adding Z blocks X->Y, do not condition on Z!") + theme_dag_blank()
 
 # pdm3 <- ggdag::ggdag_adjustment_set(dag_1, exposure = "X",
 #                                     outcome = "Y") + labs(title = "Do not condition on Z!")
-pdm2
+
 
 # figure
+library(ggplot2)
+library(patchwork)
 fig2 <-
   pdm + pdm2  + plot_annotation(tag_levels = 'a',
-                                      title = "Post-treatment confounding",
-                                      subtitle = "When the causal effect of x on y is fully mediated, \ncontrolling for a mediator will block the path between x and y")  + plot_layout(guides = 'collect')
+                                      title = "Post-treatment confounding") +  plot_layout(guides = 'collect')
+                                     # subtitle = "When the causal effect of x on y is fully mediated, \ncontrolling for a mediator will block the path between x and y")  + plot_layout(guides = 'collect')
 
 # graph
 fig2
@@ -249,6 +255,9 @@ fig2
 #                    outcome = "y",text = FALSE, use_labels = "label")
 
 ```
+
+
+### Simulation of post-treatment confounding
 
 What variables do we need to include to obtain an unbiased estimate of X on Y?
 
@@ -309,249 +318,7 @@ If we were interested in assessing x$\to$y but x were to effect y through m (i.e
 In experiments we should never condition on a post-treatment variable.
 
 
-### Mediation and causation
-
-## Mediation and causation
-
-Suppose we were interested in the causal effect of X on Y.  We have a direct effect of X on Y as well as an indirect effect of X on Y through M. We use `ggdag` to draw the DAG:
-
-
-```{r}
-dag_1 <- dagify(y ~ x + m,
-                m ~ x,
-                exposure = "x",
-                outcome = "y") %>%
-  tidy_dagitty(layout = "tree")
-
-dag_1 %>%
-  ggdag()
-```
-
-What should we condition on if we are interested in the causal effect of changes in X on changes in Y?
-
-We can pose the question to `ggdag`:
-
-```{r}
-# ask ggdag which variables to condition on:
-
-ggdag::ggdag_adjustment_set(dag_1)
-
-```
-
-'Backdoor Paths Unconditionally Closed' means that, assuming the DAG we have drawn is correct, we may obtain an unbiased estimate of X on Y without including additional variables. 
-
-Later we shall understand why this is the case.^[We shall see there is no "backdoor path" from X to Y that would bias our estimate, hence the estimate X->Y is an unbiased causal estimate -- again, conditional on our DAG.]
-
-For now, we can enrich our language for causal inference by considering the concept of `d-connected` and `d-separated`:
-
-Two variables are `d-connected` if information flows between them (condional on the graph), and they are `d-separated` if they are conditionally independent of each other.
-
-```{r}
-# use this code to examine d-connectedness
-ggdag::ggdag_dconnected(dag_1)
-```
-
-In this case, d-connection is a good thing because we can estimate the causal effect of X on Y. In other cases, d-connection will spoil the model. We have seen this for omitted variable bias. X and Y are d-separated conditional on Z, and that's our motivation for including Z! These concepts are tricky, but they get easier with practice. 
-
-To add some grit to our exploration of mediation lets simulate data that are consistent with our mediation DAG
-
-
-```{r echo = FALSE, include = FALSE}
-set.seed(123)
-N <- 100
-x <- rnorm(N)# sim x
-m <- rnorm(N , x) # sim X -> M
-y <- rnorm(N , x + m) # sim M -> Y
-df2 <- data.frame(x, m, y)
-
-df2 <- df2 %>%
-  dplyr::mutate(x_s = scale(x),
-                m_s = scale(m))
-```
-
-
-First we ask, is X is related to Y?
-
-```{r}
-m2 <- lm(y ~ x_s, data = df2)
-parameters::model_parameters(m2)
-```
-
-Yes.
-
-Next we ask, Is X related to Y conditional on M? 
-
-```{r}
-m2 <- lm(y ~ x_s + m_s, data = df2)
-parameters::model_parameters(m2) %>% print_html()
-```
-
-Yes, but notice this is a different question. The effect of X is attenuated because M contributes to the causal effect of Y. 
-
-A mediation model would tell us the same. Recall from lecture 9 we can write a mediation model as follows:
-
-
-
-```{r}
-path_m <- brms::bf(m_s ~ x_s)
-path_y <- brms::bf(y ~ x_s + m_s)
-
-m1 <- brms::brm(
-  path_m + path_y + set_rescor(FALSE),
-  data = df2,
-  file = here::here("models", "mediation-lect11-1")
-)
-
-parameters::model_parameters(m1) %>% print_html()
-```
-
-Recalling:
-
-```{r}
-bmlm::mlm_path_plot(xlab = "Focal\n(X)",
-              mlab = "Mediator\n(M)",
-              ylab = "Outcome\n(Y)")
-```
-
-For a mediation model we may recover the indirect, direct and total effects as follow:
-
-```{r}
-# get posterior distributions
-post <- brms::posterior_samples(m1)
-
-# sum and multiply the posterior distributions to obain parameter estimates
-post2 <- post %>%
-  transmute(
-    a = b_ms_x_s ,
-    b = b_y_m_s,
-    cp = b_y_x_s,
-    me = a * b,
-    c = cp + me#,
-    # pme = me / c
-  )
-
-# plot the results
-mcmc_intervals(post2) 
-```
-
-So we can ask how X affects Y  in relation to X's effect on M. 
-
-However, to obtain an unbiased causal estimate of X on Y we only needed to include X We didn't need to condition on M to estimate the *causal* effect of X.
-
-### Masked relationships
-
-Imagine two variables were to affect an outcome. Both are correlated with each other. One affects the outcome positively and the other affects the outcome negatively. How shall we investigate the causal role of the focal predictor?
-
-Consider two correlated variables that jointly predict Political conservatism (C), religion (R). Imagine that one variable has a positive effect and the other has a negative effect on distress (K6).
-
-First consider this relationship, where conservatism causes religion
-
-```{r}
-dag_m1 <- dagify(K ~ C + R,
-                 R ~ C,
-                 exposure = "C",
-                 outcome = "K") %>%
-  tidy_dagitty(layout = "tree")
-
-# graph
-dag_m1 %>%
-  ggdag()
-```
-
-We can simulate the data:
-
-```{r}
-# C -> K <- R
-# C -> R
-set.seed(123)
-n <- 100
-C <- rnorm(n)
-R <- rnorm(n , C)
-K <- rnorm(n , R - C)
-
-d_sim <- data.frame(K = K, R = R, C = C)
-```
-
-First we only condition on conservatism
-
-```{r}
-ms1 <- parameters::model_parameters(lm(K  ~ C, data = d_sim))
-plot(ms1)
-ms1
-```
-
-Next, only religion:
-
-```{r}
-ms2 <- parameters::model_parameters(lm(K  ~ R, data = d_sim))
-plot(ms2)
-```
-
-When we add both C and R, we see them "pop" in opposite directions, as is typical of masking:
-
-```{r}
-ms3 <- parameters::model_parameters(lm(K  ~ C + R, data = d_sim))
-plot(ms3)
-```
-
-Mediation model
-
-```{r}
-path_m <- brms::bf(R ~ C)
-path_y <- brms::bf(K ~ C + R)
-
-m2 <- brms::brm(
-  path_m + path_y + set_rescor(FALSE),
-  data = d_sim,
-  file = here::here("models", "mediation-lect11-2")
-)
-
-# parameters::model_parameters(m2)%>%
-#   print_html()
-```
-
-Recalling:
-
-```{r}
-bmlm::mlm_path_plot(xlab = "Focal\n(X)",
-              mlab = "Mediator\n(M)",
-              ylab = "Outcome\n(Y)")
-```
-
-We recover the indirect, direct and total effects as follows:
-
-```{r}
-post <- brms::posterior_samples(m2)
-post2 <- post %>%
-  transmute(
-    a = b_R_C ,
-    b = b_K_R,
-    cp = b_K_C,
-    me = a * b,
-    c = cp + me #,
-    #  pme = me / c
-  )
-mcmc_intervals(post2)
-```
-
-Note that when you ask `ggdag` to assess how to obtain an unbiased estimate of C on K it will tell you you don't need to condition on R.
-
-```{r}
-dag_m1 %>%
-  ggdag_adjustment_set()
-```
-
-Yet recall when we just assessed the relationship of C on K we got this:
-
-```{r}
-plot(ms1)
-```
-
-Is the DAG wrong? 
-
-No. The fact that C$\to$R is positive and R$\to$K is negative means that if we were to increase C, we wouldn't reliably increase K. The total effect of C just isn't reliable!
-
-## Collider Confounding
+## Collider confounding
 
 
 Collider confounding occurs when we condition on a common effect of x and y.
@@ -563,12 +330,7 @@ dag_3 <- dagify(Z ~ Y,
                 exposure = "X",
                 outcome = "Y") %>%
   tidy_dagitty(layout = "fr")
-dag_3 %>%
-  ggdag()
 
-
-dag_3 %>%
-  ggdag()
 
 ddm <- ggdag::ggdag_dconnected( dag_3 ) + labs(title= "Y ~ X (no Z)")
 
@@ -631,14 +393,13 @@ dd5 <- ggdag::ggdag_adjustment_set(dg_suz, exposure = "rel", outcome = "b", text
                                                                 
 # figure
 
-
+# not used
 fig3a <-(ddm + ddm2)+ plot_annotation(tag_levels = 'a', title = "Collider Bias") + plot_layout(guides = 'collect')
 
-fig3a # 8 x 6
 
+# not used
 fig3b <- (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias in Experiments") + plot_layout(guides = 'collect')
 
-fig3b # 12 * 12
 
 
 fig3 <- (ddm + ddm2 )/ (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias") + plot_layout(guides = 'collect')
@@ -647,7 +408,9 @@ fig3 # 12 X16)
 
 # subtitle = "Experimental control variables may induce collider bias.\nOnly a subset of experimental controls are required \nto close backdoor paths."
 ```
- 
+
+### Simulation of collider confounding: the selection-distortion effect
+
 Richard McElreath describes the selection-distortion effect (Berkson's paradox) as an example of Collider Confounding [@mcelreath2020].
 
 Imagine in science there is no relationship between the newsworthiness of science and its trustworthiness. Imagine further that selection committees make decisions on the basis of the both newsworthiness and the trustworthiness of scientific proposals.
@@ -793,7 +556,7 @@ p3
 ```
 
 
-## Collider bias within experiments
+### Simulation of collider confounding within experiments
 
 We noted that conditioning on a post-treatment variable can induce bias by blocking the path between the experimental manipulation and the outcome. However, such conditioning can open a path even when there is no experimental effect.
 
@@ -912,7 +675,6 @@ dag_sd <- dagify(
 
 ds1 <- ggdag::ggdag_dconnected(dag_sd  , text = FALSE,
                                use_labels = "label") + labs(title = "Meaning ~ Religion")
-ds1
 
 
 
@@ -928,7 +690,6 @@ ds2 <- dag_sd %>%
           subtitle = "Conditioning on a descendent induces collider bias")
 
 
-ds2
 
 dgg <- dagify(
   Z ~ X,
@@ -948,8 +709,6 @@ ds3 <- ggdag::ggdag_adjustment_set(dgg,
                                    text = FALSE,
                                    use_labels = "label") + labs(title = "Do not condition on Friends!")
 
-ds3
-
 
 
 library(patchwork)
@@ -958,49 +717,9 @@ fig4 <-
   ds1 + ds2  + plot_annotation(tag_levels = 'a',
                                     title = "Descendent confounding")  + plot_layout(guides = 'collect')
 
+fig4
 # graph figure
  # 8 x 6
-
-
-
-```
-
-
-Let's return to our previous example about church attendance. Imagine that people who are distressed have lower income, and that income is otherwise unrelated to meaning in life or church attendance.  Controlling for a "descendent" of distress will open a relationship beween church attendance and meaning in life. 
-
-
-```{r code_folding = TRUE}
-dag_ml2 <- dagify(d ~ rs,
-                 d ~ m,
-                 i ~ d,
-                 labels = c("rs" = "Religious Service",
-                            "d" = "Psychological Distress",
-                            "m" = "Meaning in Life",
-                            "i" = "Income")) %>%
-  tidy_dagitty(layout = "nicely")
-
-
-
-pp4 <- ggdag_dseparated(dag_ml2, 
-                 from = "rs",
-                 to = "m",
-                 controlling_for = "i",
-                 text = FALSE, use_labels = "label")
-
-p4 <- pp4 + labs(title="Collider confounding with descendents" , subtitle = "Confounding arises when we control for a descendent of a collider")
-
-pp5 <- ggdag_dseparated(dag_ml2, 
-                 from = "rs",
-                 to = "m",
-                 text = FALSE, use_labels = "label")
-
-p5 <- pp5 +  labs(title=" Avoid collider confounding" , subtitle = "We avoid collider confouding by leaving the collider out of our model")
-```
-
-```{r}
-(p3 + p4) /p5 + plot_annotation(tag_levels = 'a') + plot_layout(guides = 'collect')
-
-# fig3 12 x 12
 ```
 
 
@@ -1020,9 +739,11 @@ McElreath offers the following advice in *Statistical Rethinking*, p.286
 Practically speaking this can be very difficult. We often have many paths to consider.
 
 
-## Conditional Independence 
+## Appendix 1: 
 
-In the causal inference literature, we evaluate dependencies using the langauge of "conditional independence."  
+### Conditional independence 
+
+In the causal inference literature, we evaluate dependencies using the language of "conditional independence."  
 
 Once we condition on Z, the link between X and Y is broken.
 
@@ -1034,7 +755,259 @@ g <- dagitty("dag{ x <- z -> y }")
 impliedConditionalIndependencies(g)
 ```
 
-We can use implied conditional independencies to test whether our DAG is right. For example, if X were to remain reliably predictive of Y, then we would know that the DAG we have drawn here is not correct. 
+We can use implied conditional independence to test whether our DAG is wrong For example, if X were to remain reliably predictive of Y, then we would know that the DAG we have drawn here is not correct.
+
+The data can help us to rule out certain causal assumptions, but the data alone typically do not generate a unique causal model for the world. Causation is under-determined by the data.  
+
+## Appendix 2: more about mediation
+
+
+### Direct and indirect effects
+
+Suppose we were interested in the causal effect of X on Y.  We have a direct effect of X on Y as well as an indirect effect of X on Y through M. We use `ggdag` to draw the DAG:
+
+
+```{r}
+dag_1 <- dagify(y ~ x + m,
+                m ~ x,
+                exposure = "x",
+                outcome = "y") %>%
+  tidy_dagitty(layout = "tree")
+
+dag_1 %>%
+  ggdag()
+```
+
+What should we condition on if we are interested in the causal effect of changes in X on changes in Y?
+
+We can pose the question to `ggdag`:
+
+```{r}
+# ask ggdag which variables to condition on:
+
+ggdag::ggdag_adjustment_set(dag_1)
+
+```
+
+'Backdoor Paths Unconditionally Closed' means that, assuming the DAG we have drawn is correct, we may obtain an unbiased estimate of X on Y without including additional variables. 
+
+Later we shall understand why this is the case.^[We shall see there is no "backdoor path" from X to Y that would bias our estimate, hence the estimate X->Y is an unbiased causal estimate -- again, conditional on our DAG.]
+
+For now, we can enrich our language for causal inference by considering the concept of `d-connected` and `d-separated`:
+
+Two variables are `d-connected` if information flows between them (condional on the graph), and they are `d-separated` if they are conditionally independent of each other.
+
+```{r}
+# use this code to examine d-connectedness
+ggdag::ggdag_dconnected(dag_1)
+```
+
+In this case, d-connection is a good thing because we can estimate the causal effect of X on Y. In other cases, d-connection will spoil the model. We have seen this for omitted variable bias. X and Y are d-separated conditional on Z, and that's our motivation for including Z! These concepts are tricky, but they get easier with practice. 
+
+To add some grit to our exploration of mediation lets simulate data that are consistent with our mediation DAG
+
+
+```{r echo = FALSE, include = FALSE}
+set.seed(123)
+N <- 100
+x <- rnorm(N)# sim x
+m <- rnorm(N , x) # sim X -> M
+y <- rnorm(N , x + m) # sim M -> Y
+df2 <- data.frame(x, m, y)
+
+df2 <- df2 %>%
+  dplyr::mutate(x_s = scale(x),
+                m_s = scale(m))
+```
+
+
+First we ask, is X is related to Y?
+
+```{r}
+# regression model
+m2 <- lm(y ~ x_s, data = df2)
+
+#table
+parameters::model_parameters(m2) %>%
+  print_html()
+```
+
+Yes.
+
+Next we ask, Is X related to Y conditional on M? 
+
+```{r}
+# regression model
+m2 <- lm(y ~ x_s + m_s, data = df2)
+
+# table
+parameters::model_parameters(m2) %>% print_html()
+```
+
+Yes, but notice this is a different question. The effect of X is attenuated because M contributes to the causal effect of Y. 
+
+A mediation model would tell us the same. Recall from lecture 9 we can write a mediation model as follows:
+
+
+
+```{r}
+path_m <- brms::bf(m_s ~ x_s)
+path_y <- brms::bf(y ~ x_s + m_s)
+
+m1 <- brms::brm(
+  path_m + path_y + set_rescor(FALSE),
+  data = df2,
+  file = here::here("models", "mediation-lect11-1")
+)
+
+parameters::model_parameters(m1) %>% print_html()
+```
+
+Recalling:
+
+```{r}
+bmlm::mlm_path_plot(xlab = "Focal\n(X)",
+              mlab = "Mediator\n(M)",
+              ylab = "Outcome\n(Y)")
+```
+
+For a mediation model we may recover the indirect, direct and total effects as follow:
+
+```{r}
+# get posterior distributions
+post <- brms::posterior_samples(m1)
+
+# sum and multiply the posterior distributions to obain parameter estimates
+post2 <- post %>%
+  transmute(
+    a = b_ms_x_s ,
+    b = b_y_m_s,
+    cp = b_y_x_s,
+    me = a * b,
+    c = cp + me#,
+    # pme = me / c
+  )
+
+# plot the results
+mcmc_intervals(post2) + theme_classic()
+```
+
+So we can ask how X affects Y  in relation to X's effect on M. 
+
+However, to obtain an unbiased causal estimate of X on Y we only needed to include X We didn't need to condition on M to estimate the *causal* effect of X.
+
+### Masked relationships
+
+Imagine two variables were to affect an outcome. Both are correlated with each other. One affects the outcome positively and the other affects the outcome negatively. How shall we investigate the causal role of the focal predictor?
+
+Consider two correlated variables that jointly predict Political conservatism (C), religion (R). Imagine that one variable has a positive effect and the other has a negative effect on distress (K6).
+
+First consider this relationship, where conservatism causes religion
+
+```{r}
+dag_m1 <- dagify(K ~ C + R,
+                 R ~ C,
+                 exposure = "C",
+                 outcome = "K") %>%
+  tidy_dagitty(layout = "tree")
+
+# graph
+dag_m1 %>%
+  ggdag()
+```
+
+We can simulate the data:
+
+```{r}
+# C -> K <- R
+# C -> R
+set.seed(123)
+n <- 100
+C <- rnorm(n)
+R <- rnorm(n , C)
+K <- rnorm(n , R - C)
+
+d_sim <- data.frame(K = K, R = R, C = C)
+```
+
+First we only condition on conservatism
+
+```{r}
+ms1 <- parameters::model_parameters(lm(K  ~ C, data = d_sim))
+plot(ms1)
+ms1
+```
+
+Next, only religion:
+
+```{r}
+ms2 <- parameters::model_parameters(lm(K  ~ R, data = d_sim))
+plot(ms2)
+```
+
+When we add both C and R, we see them "pop" in opposite directions, as is typical of masking:
+
+```{r}
+ms3 <- parameters::model_parameters(lm(K  ~ C + R, data = d_sim))
+plot(ms3)
+```
+
+Mediation model
+
+```{r}
+path_m <- brms::bf(R ~ C)
+path_y <- brms::bf(K ~ C + R)
+
+m2 <- brms::brm(
+  path_m + path_y + set_rescor(FALSE),
+  data = d_sim,
+  file = here::here("models", "mediation-lect11-2")
+)
+
+# parameters::model_parameters(m2)%>%
+#   print_html()
+```
+
+Recalling:
+
+```{r}
+bmlm::mlm_path_plot(xlab = "Focal\n(X)",
+              mlab = "Mediator\n(M)",
+              ylab = "Outcome\n(Y)")
+```
+
+We recover the indirect, direct and total effects as follows:
+
+```{r}
+post <- brms::posterior_samples(m2)
+post2 <- post %>%
+  transmute(
+    a = b_R_C ,
+    b = b_K_R,
+    cp = b_K_C,
+    me = a * b,
+    c = cp + me #,
+    #  pme = me / c
+  )
+mcmc_intervals(post2) + theme_classic()
+```
+
+Note that when you ask `ggdag` to assess how to obtain an unbiased estimate of C on K it will tell you you don't need to condition on R.
+
+```{r}
+dag_m1 %>%
+  ggdag_adjustment_set()
+```
+
+Yet recall when we just assessed the relationship of C on K we got this:
+
+```{r}
+plot(ms1)
+```
+
+Is the DAG wrong? 
+
+No. The fact that C$\to$R is positive and R$\to$K is negative means that if we were to increase C, we wouldn't reliably increase K. The total effect of C just isn't reliable!
 
 
 ## Readings
