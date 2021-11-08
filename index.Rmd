@@ -145,20 +145,23 @@ fig1 <-
 
 # graph figure
 fig1 # 8 * 6
+```
 
-dev.off()
 
+```{r fig1, eval=FALSE}
 
-ggsave(fig1, 
-       path = here::here("figs", "test"), 
-       # width = 800, 
-       # height = 600, 
-       # units = "mm",
-       device='tiff', 
-       limitsize = FALSE,
-       dpi= 300)
-
-# save figure
+# save graph
+ggsave(
+  fig1,
+  path = here::here("figs"),
+  width = 10,
+  height = 5,
+  units = "in",
+  filename = "fig1.jpg",
+  device = 'jpeg',
+  limitsize = FALSE,
+  dpi = 1200
+)
 
 
 
@@ -229,7 +232,7 @@ pdm <-
 
 
 pdm2 <-
-  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y", controlling_for = c("Z")) + labs(title = "Y ~ X + Z", subtitle = "Adding Z blocks X->Y, do not condition on Z!") + theme_dag_blank()
+  ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y", controlling_for = c("Z")) + labs(title = "Y ~ X + Z", subtitle = "Adding Z blocks X->Y, do not condition on Z.") + theme_dag_blank()
 
 # pdm3 <- ggdag::ggdag_adjustment_set(dag_1, exposure = "X",
 #                                     outcome = "Y") + labs(title = "Do not condition on Z!")
@@ -270,6 +273,22 @@ fig2
 # pdm3 <- ggdag_adjustment_set(dm, 
 #                          exposure  = "x",
 #                    outcome = "y",text = FALSE, use_labels = "label")
+
+```
+
+```{r, eval = false}
+#save graph
+ggsave(
+  fig2,
+  path = here::here("figs"),
+  width = 10,
+  height = 5,
+  units = "in",
+  filename = "fig2.jpg",
+  device = 'jpeg',
+  limitsize = FALSE,
+  dpi = 1200
+)
 
 ```
 
@@ -419,11 +438,30 @@ fig3b <- (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias
 
 
 
-fig3 <- (ddm + ddm2 )/ (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias") + plot_layout(guides = 'collect')
+fig3 <-
+  (ddm + ddm2) / (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias") + plot_layout(guides = 'collect')
 
 fig3 # 12 X16)
 
 # subtitle = "Experimental control variables may induce collider bias.\nOnly a subset of experimental controls are required \nto close backdoor paths."
+```
+
+
+
+
+```{r, eval = false}
+#save graph
+ggsave(
+  fig3,
+  path = here::here("figs"),
+  width = 12,
+  height = 12,
+  units = "in",
+  filename = "fig3.jpg",
+  device = 'jpeg',
+  limitsize = FALSE,
+  dpi = 1200
+)
 ```
 
 ### Simulation of collider confounding: the selection-distortion effect
@@ -704,7 +742,7 @@ ds2 <- dag_sd %>%
     use_labels = "label"
   )  +
   ggtitle("Meaning ~ Religion + Friends",
-          subtitle = "Conditioning on a descendent induces collider bias")
+          subtitle = "Conditioning on a descendent induces collider bias.")
 
 
 
@@ -724,7 +762,7 @@ dgg <- dagify(
 
 ds3 <- ggdag::ggdag_adjustment_set(dgg,
                                    text = FALSE,
-                                   use_labels = "label") + labs(title = "Do not condition on Friends!")
+                                   use_labels = "label") + labs(title = "Do not condition on Friends")
 
 
 
@@ -738,6 +776,25 @@ fig4
 # graph figure
  # 8 x 6
 ```
+
+
+
+```{r, eval = false}
+#save graph
+ggsave(
+  fig4,
+  path = here::here("figs"),
+  width = 10,
+  height = 10,
+  units = "in",
+  filename = "fig4.jpg",
+  device = 'jpeg',
+  limitsize = FALSE,
+  dpi = 1200
+)
+
+```
+
 
 
 
