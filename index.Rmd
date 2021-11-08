@@ -145,6 +145,23 @@ fig1 <-
 
 # graph figure
 fig1 # 8 * 6
+
+dev.off()
+
+
+ggsave(fig1, 
+       path = here::here("figs", "test"), 
+       # width = 800, 
+       # height = 600, 
+       # units = "mm",
+       device='tiff', 
+       limitsize = FALSE,
+       dpi= 300)
+
+# save figure
+
+
+
 ```
 
 ### Simulation of omitted variable confounding
