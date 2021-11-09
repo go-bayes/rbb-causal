@@ -729,7 +729,8 @@ dag_sd <- dagify(
 
 
 ds1 <- ggdag::ggdag_dconnected(dag_sd  , text = FALSE,
-                               use_labels = "label") + labs(title = "Meaning ~ Religion")
+                               use_labels = "label") + labs(title = "Meaning ~ Religion") + 
+    geom_dag_point(color = c("steelblue", "red") )
 
 
 
@@ -742,10 +743,8 @@ ds2 <- dag_sd %>%
     use_labels = "label"
   )  +
   ggtitle("Meaning ~ Religion + Friends",
-          subtitle = "Conditioning on a descendent induces collider bias.")
-
-
-
+          subtitle = "Conditioning on a descendent induces collider bias.") 
+'
 dgg <- dagify(
   Z ~ X,
   Z ~ Y,
@@ -762,7 +761,7 @@ dgg <- dagify(
 
 ds3 <- ggdag::ggdag_adjustment_set(dgg,
                                    text = FALSE,
-                                   use_labels = "label") + labs(title = "Do not condition on Friends")
+                                   use_labels = "label") + labs(title = "Do not condition on Friends") 
 
 
 
@@ -1123,7 +1122,22 @@ dgg <- dagify(
 
 ds3 <- ggdag::ggdag_adjustment_set(dgg,
                                    text = FALSE,
-                                   use_labels = "label") + labs(title = "Esimating the Causal Effects of Cooperative Gods on Social Complexity Requires adjusting for geographical proximity, shared cultural history, and language similarities.") 
+                                   use_labels = "label") + labs(title = "Esimating the Causal Effects of Cooperative Gods on Social Complexity Requires adjusting for geographical proximity, shared cultural history, and language similarities.") + 
+  scale_colour_viridis_d(
+  alpha = 1,
+  begin = 0,
+  end = 1,
+  direction = 1,
+  option = "D",
+  aesthetics = "colour"
+)
+
+
++ 
+  geom_dag_point(
+   colour = "grey50"
+  )
+  
 
 ds3
 
