@@ -54,7 +54,8 @@ packages <- c(
   "rstanarm",
   "bayesplot",
   "easystats",
-  "ggplot2"
+  "ggplot2",
+  "viridisLite"
 )
 ipak(packages)
 
@@ -149,7 +150,6 @@ fig1 # 8 * 6
 
 
 ```{r fig1, eval=FALSE}
-
 # save graph
 ggsave(
   fig1,
@@ -162,8 +162,6 @@ ggsave(
   limitsize = FALSE,
   dpi = 1200
 )
-
-
 
 ```
 
@@ -234,8 +232,6 @@ pdm <-
 pdm2 <-
   ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y", controlling_for = c("Z")) + labs(title = "Y ~ X + Z", subtitle = "Adding Z blocks X->Y, do not condition on Z.") + theme_dag_blank()
 
-# pdm3 <- ggdag::ggdag_adjustment_set(dag_1, exposure = "X",
-#                                     outcome = "Y") + labs(title = "Do not condition on Z!")
 
 
 # figure
@@ -276,7 +272,7 @@ fig2
 
 ```
 
-```{r, eval = false}
+```{r, eval = FALSE}
 #save graph
 ggsave(
   fig2,
@@ -360,27 +356,24 @@ In experiments we should never condition on a post-treatment variable.
 Collider confounding occurs when we condition on a common effect of x and y.
 
 ```{r}
-
+# dag
 dag_3 <- dagify(Z ~ Y,
                 Z ~ X,
                 exposure = "X",
                 outcome = "Y") %>%
   tidy_dagitty(layout = "fr")
 
+# check d-connected
+ddm <-
+  ggdag::ggdag_dconnected(dag_3) + labs(title = "Y ~ X (no Z)")
 
-ddm <- ggdag::ggdag_dconnected( dag_3 ) + labs(title= "Y ~ X (no Z)")
-
-ddm2 <- ggdag::ggdag_dconnected( dag_3, controlling_for = "Z") + labs(title = "Y ~ X + Z", subtitle = "Adding Z opens X->Y")
-
-
-# ddm3 <- ggdag::ggdag_adjustment_set(dag_3, exposure = "X", 
-#                             outcome = "Y") + labs(title= "Do not condition on Z!")
-
+# check d-connected controlling for Z
+ddm2 <-
+  ggdag::ggdag_dconnected(dag_3, controlling_for = "Z") + labs(title = "Y ~ X + Z", subtitle = "Adding Z opens X->Y")
 
 
-# Collider bias in experiments
 
-
+# experiment
 library(ggdag)
 dg_suz <- ggdag::dagify(
   b ~  im + ordr + rel + sr + edu +  st + cny,
@@ -408,54 +401,183 @@ dg_suz <- ggdag::dagify(
 ) %>%
   control_for("rel")
 
-text_size <- 40
-dd4 <- ggdag::ggdag_collider(dg_suz, text = FALSE, use_labels = "label", node_size = 10, label_size = 10) +  
-  #geom_dag_text(size = 18) +
- # geom_dag_node(size = 40) +
-  geom_dag_collider_edges(
-  size = 0.6 #,
-  # curvature = 0.5,
-  # angle = 90,
-  # ncp = 5,
-  # arrow = NULL,
-  # lineend = "butt",
-  # na.rm = FALSE,
-  # show.legend = NA,
-  # inherit.aes = TRUE
-) +
+#  not run
+# text_size <- 40
+# dd4 <- ggdag::ggdag_collider(
+#   dg_suz,
+#   text = FALSE,
+#   use_labels = "label",
+#   node_size = 10,
+# #  label_size = 10,
+#   text_col = "white",
+#   label_col = "white",
+# ) +
+#   #geom_dag_text(size = 18) +
+#   # geom_dag_node(size = 40) +
+#   geom_dag_collider_edges(
+#     size = 0.6 , show.legend = NA) +
+#     # angle = 90,
+#     # ncp = 5,
+#     # arrow = NULL,
+#     # lineend = "butt",
+#     # na.rm = FALSE,
+#     # show.legend = NA) +
+#     # geom_dag_text(colour = "steelblue")
+#   #  scale_colour_viridis_d(option = "cividis") +
+#     scale_color_viridis_d(
+#      # name = "d-relationship",
+#       end = .8
+#     )
+
+
+# colliders
+dd4 <- ggdag::dagify(
+  b ~  im + ordr + rel + sr + edu +  st + cny,
+  rel ~  age + ses + edu + male + cny,
+  ses ~ cny + edu + age,
+  edu ~ cny + male + age,
+  im ~ mem + rel + cny + sr + edu,
+  mem ~ age + edu + ordr,
+  exposure = "sr",
+  outcome = "b",
+  labels = c(
+    "b" = "statement credibility\n(outcome)",
+    "sr" = "source\n(exposure)",
+    "st" = "statement",
+    "im" = "statement importance",
+    "mem" = "statement memory",
+    "rel" = "religiosity",
+    "cny" = "country",
+    "male" = "male",
+    "ordr" = "order",
+    "ses" = "perceived SES",
+    "edu" = "education",
+    "age" = "age"
+  )
+) %>%
+  tidy_dagitty() %>%
+  node_collider() %>%
+  ggplot(aes(
+    x = x,
+    y = y,
+    xend = xend,
+    yend = yend ,
+    # shape = colliders,
+    col = colliders
+  ))  +
+  scale_color_viridis_d(#name = "d-relationship",
+    na.value = "grey85",
+    option = "H") +
+  geom_dag_edges() +
+  #  geom_dag_collider_edges() +
+  geom_dag_node() +
+  geom_dag_label_repel(aes(label = label),
+                       col = "steelblue",
+                       show.legend = FALSE) +
+  #  geom_dag_text(col = "white") +
+  theme_dag()  +
+  #+ scale_adjusted() +
+  # expand_plot(expand_y = expansion(c(0.2, 0.2))) +
   labs(title = "Colliders in experiment")
-                                                        
-dd5 <- ggdag::ggdag_adjustment_set(dg_suz, exposure = "rel", outcome = "b", text = FALSE, use_labels = "label", node_size = 10, label_size = 10)  + labs(title = "Adjustment sets")                                                            
-                                                                
+
+
+# Adjustment set
+dd5 <- ggdag::dagify(
+  b ~  im + ordr + rel + sr + edu +  st + cny,
+  rel ~  age + ses + edu + male + cny,
+  ses ~ cny + edu + age,
+  edu ~ cny + male + age,
+  im ~ mem + rel + cny + sr + edu,
+  mem ~ age + edu + ordr,
+  exposure = "rel",
+  outcome = "b",
+  labels = c(
+    "b" = "statement credibility\n(outcome)",
+    "sr" = "source\n(exposure)",
+    "st" = "statement",
+    "im" = "statement importance",
+    "mem" = "statement memory",
+    "rel" = "religiosity",
+    "cny" = "country",
+    "male" = "male",
+    "ordr" = "order",
+    "ses" = "perceived SES",
+    "edu" = "education",
+    "age" = "age"
+  )
+) %>%
+  control_for("rel") %>%
+  ggdag_adjustment_set() +
+  scale_color_viridis_d(#name = "d-relationship",
+    na.value = "grey85",
+    option = "E") +
+  geom_dag_edges(show.legend = FALSE) +
+  # geom_dag_collider_edges() +
+  geom_dag_node() +
+  geom_dag_label_repel(aes(label = label),
+                       col = "steelblue",
+                       show.legend = FALSE) +
+  #  geom_dag_text(col = "white") +
+  theme_dag() +
+  # scale_adjusted() +
+  expand_plot(expand_y = expansion(c(0.2, 0.2))) +
+  labs(title = "Adjustment sets")
+
+# not run
+# dd5 <-
+#   ggdag::ggdag_adjustment_set(
+#     dg_suz,
+#     exposure = "rel",
+#     outcome = "b",
+#     text = FALSE,
+#     use_labels = "label",
+#     node_size = 10,
+#     label_size = 10
+#   ) +
+#      scale_color_viridis_d(
+#     #  name = "d-relationship",
+#       na.value = "grey85",
+#       end = .4
+#     ) +
+#   labs(title = "Adjustment sets") + geom_dag_text(na.rm = FALSE,
+#                                                   show.legend = FALSE,
+#                                                   inherit.aes = TRUE)
+#
+
+
 # figure
 
 # not used
-fig3a <-(ddm + ddm2)+ plot_annotation(tag_levels = 'a', title = "Collider Bias") + plot_layout(guides = 'collect')
-
+# fig3a <-
+#   (ddm + ddm2) + plot_annotation(tag_levels = 'a', title = "Collider Bias")# + plot_layout(guides = 'collect')
+# 
 
 # not used
-fig3b <- (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias in Experiments") + plot_layout(guides = 'collect')
+# fig3b <-
+#   (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias in Experiments")# + plot_layout(guides = 'collect')
 
 
-
+# graph
 fig3 <-
-  (ddm + ddm2) / (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias") + plot_layout(guides = 'collect')
+  (ddm + ddm2) / (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias") # + plot_layout(guides = 'collect')
 
 fig3 # 12 X16)
 
+# not used
 # subtitle = "Experimental control variables may induce collider bias.\nOnly a subset of experimental controls are required \nto close backdoor paths."
+
 ```
 
 
 
 
-```{r, eval = false}
+```{r, eval = FALSE}
 #save graph
 ggsave(
   fig3,
   path = here::here("figs"),
-  width = 12,
-  height = 12,
+  width = 15,
+  height = 15,
   units = "in",
   filename = "fig3.jpg",
   device = 'jpeg',
@@ -744,7 +866,7 @@ ds2 <- dag_sd %>%
   )  +
   ggtitle("Meaning ~ Religion + Friends",
           subtitle = "Conditioning on a descendent induces collider bias.") 
-'
+
 dgg <- dagify(
   Z ~ X,
   Z ~ Y,
@@ -778,7 +900,7 @@ fig4
 
 
 
-```{r, eval = false}
+```{r, eval = FALSE}
 #save graph
 ggsave(
   fig4,
