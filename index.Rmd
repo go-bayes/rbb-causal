@@ -1091,3 +1091,61 @@ Required readings are as follows:
 -   @rohrer2018 [link](https://journals.sagepub.com/doi/full/10.1177/2515245917745629)
 -   @barrett2021 [link](https://cran.r-project.org/package=ggdag)
 -   @mcelreath2020[link](https://tewaharoa.victoria.ac.nz/discovery/fulldisplay?docid=alma99179374299902386&context=L&vid=64VUW_INST:VUWNUI&search_scope=MyInst_and_CI&tab=all&lang=en)
+
+
+
+```{r include = FALSE, eval = FALSE}
+# 
+# ds2 <- dag_sd %>%
+#   ggdag_dseparated(
+#     from = "X",
+#     to = "Y",
+#     controlling_for = "D",
+#     text = FALSE,
+#     use_labels = "label"
+#   )  +
+#   ggtitle("Meaning ~ Religion + Friends",
+#           subtitle = "Conditioning on a descendent induces collider bias.")
+
+dgg <- dagify(
+  sc ~ m + geo + l + hist,
+  l ~ geo + hist,
+  m ~ geo + l + hist, 
+  labels = c(
+    "sc" = "social complexity",
+    "m" = "gods of cooperation",
+    "l" = "language similarity",
+    "hist" = "shared history"
+  ),
+  exposure = "m",
+  outcome = "sc"
+) 
+
+ds3 <- ggdag::ggdag_adjustment_set(dgg,
+                                   text = FALSE,
+                                   use_labels = "label") + labs(title = "Esimating the Causal Effects of Cooperative Gods on Social Complexity Requires adjusting for geographical proximity, shared cultural history, and language similarities.") 
+
+ds3
+
+
+
+
+dgg <- dagify(
+  m ~ sc + geo + l + hist,
+  l ~ geo + hist,
+  sc ~ geo + l + hist, 
+  labels = c(
+    "sc" = "social complexity",
+    "m" = "gods of cooperation",
+    "l" = "language similarity",
+    "hist" = "shared history"
+  ),
+  exposure = "sc",
+  outcome = "m"
+) 
+
+# %>%
+#   control_for(c("l","hist"))
+
+```
+
