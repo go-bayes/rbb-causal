@@ -698,8 +698,8 @@ mediation_triangle(
   ggdag()
 ```
 
-### The Collider
 
+### The Collider
 ```{r}
 collider_triangle() %>%
   ggdag_dseparated(controlling_for = "m")
@@ -711,8 +711,8 @@ If we "control for" a descendant of a collider, we will introduce collider bias.
 
 ```{r}
 dag_sd <- dagify(
-  Z ~ X,
   Z ~ Y,
+  Z ~ X,
   D ~ Z,
   labels = c(
     "Z" = "Distress",
@@ -1094,7 +1094,7 @@ Required readings are as follows:
 
 
 ```{r include = FALSE, eval = FALSE}
-# 
+library(ggdag)
 # ds2 <- dag_sd %>%
 #   ggdag_dseparated(
 #     from = "X",
@@ -1160,6 +1160,74 @@ dgg <- dagify(
 
 # %>%
 #   control_for(c("l","hist"))
+
+mTBI outcomes
+
+dgg <- dagify(
+  mTBI ~ pproc + distress + ex,
+  pproc ~ distress + pflex + tr,
+  pflex ~ ex,
+  ex ~ tr,
+  pprox ~ tr,
+  
+  # labels = c(
+  #   "sc" = "social complexity",
+  #   "m" = "gods of cooperation",
+  #   "l" = "language similarity",
+  #   "hist" = "shared history"
+  # ),
+  exposure = "tr",
+  outcome = "mTBI"
+) 
+
+ggdag::ggdag_adjustment_set(dgg,
+                                   text = TRUE,
+                                   ) 
+
+
+
+dgg <- dagify(
+  mTBI ~ pproc + distress + ex,
+  pproc ~ distress + pflex + tr + ex,
+  pflex ~ ex,
+  ex ~ tr,
+  pproc ~ tr,
+  
+  # labels = c(
+  #   "sc" = "social complexity",
+  #   "m" = "gods of cooperation",
+  #   "l" = "language similarity",
+  #   "hist" = "shared history"
+  # ),
+  exposure = "pproc",
+  outcome = "mTBI"
+) 
+
+ggdag::ggdag_adjustment_set(dgg,
+                                   text = TRUE,
+                                   ) 
+
+
+dgg <- dagify(
+  mTBI ~ pproc + distress + ex,
+  pproc ~ distress + pflex + tr + ex,
+  pflex ~ ex,
+  ex ~ tr,
+  pflex ~ tr,
+  
+  # labels = c(
+  #   "sc" = "social complexity",
+  #   "m" = "gods of cooperation",
+  #   "l" = "language similarity",
+  #   "hist" = "shared history"
+  # ),
+  exposure = "pflex",
+  outcome = "mTBI"
+) 
+
+ggdag::ggdag_adjustment_set(dgg,
+                                   text = TRUE,
+                                   ) 
 
 ```
 
