@@ -376,7 +376,8 @@ ddm2 <-
 # experiment
 library(ggdag)
 dg_suz <- ggdag::dagify(
-  b ~  im + ordr + rel + sr + edu +  st + cny,
+ b ~  im + ordr + rel + sr + edu +  st + cny,
+  sr ~ rel + cny, 
   rel ~  age + ses + edu + male + cny,
   ses ~ cny + edu + age,
   edu ~ cny + male + age,
@@ -397,9 +398,7 @@ dg_suz <- ggdag::dagify(
     "ses" = "perceived SES",
     "edu" = "education",
     "age" = "age"
-  )
-) %>%
-  control_for("rel")
+  ) ) 
 
 #  not run
 # text_size <- 40
@@ -433,6 +432,7 @@ dg_suz <- ggdag::dagify(
 # colliders
 dd4 <- ggdag::dagify(
   b ~  im + ordr + rel + sr + edu +  st + cny,
+  sr ~ rel + cny, 
   rel ~  age + ses + edu + male + cny,
   ses ~ cny + edu + age,
   edu ~ cny + male + age,
@@ -478,18 +478,18 @@ dd4 <- ggdag::dagify(
   theme_dag()  +
   #+ scale_adjusted() +
   # expand_plot(expand_y = expansion(c(0.2, 0.2))) +
-  labs(title = "Colliders in experiment")
-
+  labs(title = "Graph of collider relationships among variables \nin an experiment (ignoring exposure and outcome.)")
 
 # Adjustment set
 dd5 <- ggdag::dagify(
   b ~  im + ordr + rel + sr + edu +  st + cny,
+  sr ~ rel + cny, 
   rel ~  age + ses + edu + male + cny,
   ses ~ cny + edu + age,
   edu ~ cny + male + age,
   im ~ mem + rel + cny + sr + edu,
   mem ~ age + edu + ordr,
-  exposure = "rel",
+  exposure = "sr",
   outcome = "b",
   labels = c(
     "b" = "statement credibility\n(outcome)",
@@ -506,7 +506,6 @@ dd5 <- ggdag::dagify(
     "age" = "age"
   )
 ) %>%
-  control_for("rel") %>%
   ggdag_adjustment_set() +
   scale_color_viridis_d(#name = "d-relationship",
     na.value = "grey85",
@@ -521,7 +520,7 @@ dd5 <- ggdag::dagify(
   theme_dag() +
   # scale_adjusted() +
   expand_plot(expand_y = expansion(c(0.2, 0.2))) +
-  labs(title = "Adjustment sets")
+  labs(title = "To obtain an unbiased estimate of source on credibility among people who\nvary by religiosity we need only condition on religiosity and country.")
 
 # not run
 # dd5 <-
