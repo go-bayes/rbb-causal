@@ -1264,46 +1264,43 @@ ds3
 
 
 
-
+library(ggdag)
 dgg <- dagify(
-  m ~ sc + geo + l + hist,
-  l ~ geo + hist,
-  sc ~ geo + l + hist, 
+  sc2 ~ sc1 + m1 + m2 +  geo + l2 + hist2,
+  m2 ~ m1 + geo + l2 + hist2,
+  l2 ~ l1 + geo + hist2,
+  his2 ~ hist1 + geo,
+  m1 ~ geo + l1 + hist1,
+  l1 ~ geo + hist1,
   labels = c(
-    "sc" = "social complexity",
-    "m" = "gods of cooperation",
-    "l" = "language similarity",
-    "hist" = "shared history"
+    "sc2" = "social complexity 2",
+      "sc1" = "social complexity 2",
+    "m2" = "gods of cooperation2",
+    "m1" = "gods of cooperation",
+    "l2" = "language similarity2",
+    "l1" = "language similarity1",
+    "hist1" = "shared history1",
+     "hist2" = "shared history2"
   ),
-  exposure = "sc",
-  outcome = "m"
+  exposure = "m2",
+  outcome = "sc2"
 ) 
 
 # %>%
 #   control_for(c("l","hist"))
 
-mTBI outcomes
+ggdag::ggdag_dseparated(dgg, text = TRUE, from = "m1", to = "sc2",
+                        controlling_for = c("l1","hist1","geo"),
+  collider_lines = TRUE) 
 
-dgg <- dagify(
-  mTBI ~ pproc + distress + ex,
-  pproc ~ distress + pflex + tr,
-  pflex ~ ex,
-  ex ~ tr,
-  pprox ~ tr,
-  
-  # labels = c(
-  #   "sc" = "social complexity",
-  #   "m" = "gods of cooperation",
-  #   "l" = "language similarity",
-  #   "hist" = "shared history"
-  # ),
-  exposure = "tr",
-  outcome = "mTBI"
-) 
+ggdag::ggdag_dseparated(dgg, text = TRUE, from = "m1", to = "sc2", collider_lines = TRUE) 
 
-ggdag::ggdag_adjustment_set(dgg,
-                                   text = TRUE,
-                                   ) 
+ggdag::ggdag(dgg, text = F,
+             label= "Labels") 
+
+ggdag::ggdag_collider(dgg, text = TRUE) 
+
+ggdag::ggdag_adjustment_set(dgg, text = TRUE) 
 
 
 
@@ -1324,9 +1321,7 @@ dgg <- dagify(
   outcome = "mTBI"
 ) 
 
-ggdag::ggdag_adjustment_set(dgg,
-                                   text = TRUE,
-                                   ) 
+ggdag::ggdag_adjustment_set( dgg,text = TRUE,use_labels = "label")
 
 
 dgg <- dagify(
@@ -1346,9 +1341,10 @@ dgg <- dagify(
   outcome = "mTBI"
 ) 
 
-ggdag::ggdag_adjustment_set(dgg,
-                                   text = TRUE,
-                                   ) 
+ggdag::ggdag_adjustment_set(dgg,text = TRUE) + 
+    geom_dag_label_repel(aes(label = label),
+                       col = "steelblue",
+                       show.legend = FALSE) 
 
 ```
 
