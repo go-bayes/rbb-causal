@@ -1118,8 +1118,8 @@ We can simulate the data:
 set.seed(123)
 n <- 100
 C <- rnorm(n)
-R <- rnorm(n , C)
 K <- rnorm(n , R - C)
+R <- rnorm(n , C)
 
 d_sim <- data.frame(K = K, R = R, C = C)
 ```
@@ -1263,6 +1263,28 @@ ds3 <- ggdag::ggdag_adjustment_set(dgg,
 ds3
 
 
+dagify(
+  sc2 ~ sc1 + m1 + m2 +  geo + l2 + hist2,
+  m2 ~ m1 + geo + l2 + hist2,
+  l2 ~ l1 + geo + hist2,
+  his2 ~ hist1 + geo,
+  m1 ~ geo + l1 + hist1,
+  l1 ~ geo + hist1,
+  labels = c(
+    "sc2" = "social complexity 2",
+    "sc1" = "social complexity 2",
+    "m2" = "gods of cooperation2",
+    "m1" = "gods of cooperation1",
+    "l2" = "language similarity2",
+    "l1" = "language similarity1",
+    "hist1" = "shared history1",
+     "hist2" = "shared history2"
+  ),
+  exposure = "m1",
+  outcome = "sc2"
+) 
+
+
 
 library(ggdag)
 dgg <- dagify(
@@ -1274,18 +1296,22 @@ dgg <- dagify(
   l1 ~ geo + hist1,
   labels = c(
     "sc2" = "social complexity 2",
-      "sc1" = "social complexity 2",
+    "sc1" = "social complexity 2",
     "m2" = "gods of cooperation2",
     "m1" = "gods of cooperation",
     "l2" = "language similarity2",
     "l1" = "language similarity1",
     "hist1" = "shared history1",
-     "hist2" = "shared history2"
+     "hist2" = "shared history2",
+    "geo1"  = "geographical proximity1",
+    "geo2"  = "geographical proximity2",
   ),
-  exposure = "m2",
+  exposure = "m1",
   outcome = "sc2"
 ) 
 
+
+dgg
 # %>%
 #   control_for(c("l","hist"))
 
@@ -1300,7 +1326,7 @@ ggdag::ggdag(dgg, text = F,
 
 ggdag::ggdag_collider(dgg, text = TRUE) 
 
-ggdag::ggdag_adjustment_set(dgg, text = TRUE) 
+ggdag::ggdag_adjustment_set(dgg, text = FALSE, use_labels = "label") 
 
 
 
