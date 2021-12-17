@@ -58,8 +58,7 @@ packages <- c(
   "viridisLite"
 )
 ipak(packages)
-
-
+#devtools::install_github("rmcelreath/rethinking")
 # packages
 library("tidyverse")
 library("ggdag")
@@ -1213,164 +1212,165 @@ Required readings are as follows:
 -   @mcelreath2020[link](https://tewaharoa.victoria.ac.nz/discovery/fulldisplay?docid=alma99179374299902386&context=L&vid=64VUW_INST:VUWNUI&search_scope=MyInst_and_CI&tab=all&lang=en)
 
 
+<!-- #  -->
+<!-- # ```{r include = FALSE, eval = FALSE} -->
+<!-- # library(ggdag) -->
+<!-- # # ds2 <- dag_sd %>% -->
+<!-- # #   ggdag_dseparated( -->
+<!-- # #     from = "X", -->
+<!-- # #     to = "Y", -->
+<!-- # #     controlling_for = "D", -->
+<!-- # #     text = FALSE, -->
+<!-- # #     use_labels = "label" -->
+<!-- # #   )  + -->
+<!-- # #   ggtitle("Meaning ~ Religion + Friends", -->
+<!-- # #           subtitle = "Conditioning on a descendent induces collider bias.") -->
+<!-- #  -->
+<!-- # dgg <- dagify( -->
+<!-- #   sc ~ m + geo + l + hist, -->
+<!-- #   l ~ geo + hist, -->
+<!-- #   m ~ geo + l + hist,  -->
+<!-- #   labels = c( -->
+<!-- #     "sc" = "social complexity", -->
+<!-- #     "m" = "gods of cooperation", -->
+<!-- #     "l" = "language similarity", -->
+<!-- #     "hist" = "shared history" -->
+<!-- #   ), -->
+<!-- #   exposure = "m", -->
+<!-- #   outcome = "sc" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- # ds3 <- ggdag::ggdag_adjustment_set(dgg, -->
+<!-- #                                    text = FALSE, -->
+<!-- #                                    use_labels = "label") + labs(title = "Esimating the Causal Effects of Cooperative Gods on Social Complexity Requires adjusting for geographical proximity, shared cultural history, and language similarities.") +  -->
+<!-- #   scale_colour_viridis_d( -->
+<!-- #   alpha = 1, -->
+<!-- #   begin = 0, -->
+<!-- #   end = 1, -->
+<!-- #   direction = 1, -->
+<!-- #   option = "D", -->
+<!-- #   aesthetics = "colour" -->
+<!-- # ) -->
+<!-- #  -->
+<!-- #  -->
+<!-- # +  -->
+<!-- #   geom_dag_point( -->
+<!-- #    colour = "grey50" -->
+<!-- #   ) -->
+<!-- #    -->
+<!-- #  -->
+<!-- # ds3 -->
+<!-- #  -->
+<!-- #  -->
+<!-- # dagify( -->
+<!-- #   sc2 ~ sc1 + m1 + m2 +  geo + l2 + hist2, -->
+<!-- #   m2 ~ m1 + geo + l2 + hist2, -->
+<!-- #   l2 ~ l1 + geo + hist2, -->
+<!-- #   his2 ~ hist1 + geo, -->
+<!-- #   m1 ~ geo + l1 + hist1, -->
+<!-- #   l1 ~ geo + hist1, -->
+<!-- #   labels = c( -->
+<!-- #     "sc2" = "social complexity 2", -->
+<!-- #     "sc1" = "social complexity 2", -->
+<!-- #     "m2" = "gods of cooperation2", -->
+<!-- #     "m1" = "gods of cooperation1", -->
+<!-- #     "l2" = "language similarity2", -->
+<!-- #     "l1" = "language similarity1", -->
+<!-- #     "hist1" = "shared history1", -->
+<!-- #      "hist2" = "shared history2" -->
+<!-- #   ), -->
+<!-- #   exposure = "m1", -->
+<!-- #   outcome = "sc2" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- #  -->
+<!-- #  -->
+<!-- # library(ggdag) -->
+<!-- # dgg <- dagify( -->
+<!-- #   sc2 ~ mscp1 + mscp2 + sc1 + geo2 + l2 + hist2, -->
+<!-- #   mscp2 ~ mscp1 + geo1 + l1 + hist1, -->
+<!-- #   l2 ~ l1 + geo2 + hist2 + mscp2, -->
+<!-- #   hist2 ~ hist1 + mscp2 + geo2 + l2, -->
+<!-- #   l1 ~ geo1 + hist1 + mscp1, -->
+<!-- #   geo2 ~ geo1 + mscp1 + l2, -->
+<!-- #   geo1 ~ mscp1 + l1 + hist1, -->
+<!-- #   labels = c( -->
+<!-- #     "sc2" = "social complexity2", -->
+<!-- #     "sc1" = "social complexity2", -->
+<!-- #     "mscp2" = "gods of cooperation2", -->
+<!-- #     "mscp1" = "gods of cooperation", -->
+<!-- #     "l2" = "language similarity2", -->
+<!-- #     "l1" = "language similarity1", -->
+<!-- #     "hist1" = "shared history1", -->
+<!-- #     "hist2" = "shared history2", -->
+<!-- #     "geo1"  = "geographical proximity1", -->
+<!-- #     "geo2"  = "geographical proximity2" -->
+<!-- #   ), -->
+<!-- #   exposure = "mscp1", -->
+<!-- #   outcome = "sc2" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- #  -->
+<!-- # dgg -->
+<!-- # # %>% -->
+<!-- # #   control_for(c("l","hist")) -->
+<!-- #  -->
+<!-- # ggdag::ggdag_dseparated(dgg, text = TRUE, from = "m1", to = "sc2", -->
+<!-- #                         controlling_for = c("l1","hist1","geo"), -->
+<!-- #   collider_lines = TRUE)  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_dseparated(dgg, text = TRUE, from = "m1", to = "sc2", collider_lines = TRUE)  -->
+<!-- #  -->
+<!-- # ggdag::ggdag(dgg, text = F, -->
+<!-- #              label= "Labels")  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_collider(dgg, text = TRUE)  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_adjustment_set(dgg, text = FALSE, use_labels = "label")  -->
+<!-- #  -->
+<!-- #  -->
+<!-- #  -->
+<!-- # dgg <- dagify( -->
+<!-- #   mTBI ~ pproc + distress + ex, -->
+<!-- #   pproc ~ distress + pflex + tr + ex, -->
+<!-- #   pflex ~ ex, -->
+<!-- #   ex ~ tr, -->
+<!-- #   pproc ~ tr, -->
+<!-- #    -->
+<!-- #   # labels = c( -->
+<!-- #   #   "sc" = "social complexity", -->
+<!-- #   #   "m" = "gods of cooperation", -->
+<!-- #   #   "l" = "language similarity", -->
+<!-- #   #   "hist" = "shared history" -->
+<!-- #   # ), -->
+<!-- #   exposure = "pproc", -->
+<!-- #   outcome = "mTBI" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_adjustment_set( dgg,text = TRUE,use_labels = "label") -->
+<!-- #  -->
+<!-- #  -->
+<!-- # dgg <- dagify( -->
+<!-- #   mTBI ~ pproc + distress + ex, -->
+<!-- #   pproc ~ distress + pflex + tr + ex, -->
+<!-- #   pflex ~ ex, -->
+<!-- #   ex ~ tr, -->
+<!-- #   pflex ~ tr, -->
+<!-- #    -->
+<!-- #   # labels = c( -->
+<!-- #   #   "sc" = "social complexity", -->
+<!-- #   #   "m" = "gods of cooperation", -->
+<!-- #   #   "l" = "language similarity", -->
+<!-- #   #   "hist" = "shared history" -->
+<!-- #   # ), -->
+<!-- #   exposure = "pflex", -->
+<!-- #   outcome = "mTBI" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_adjustment_set(dgg,text = TRUE) +  -->
+<!-- #     geom_dag_label_repel(aes(label = label), -->
+<!-- #                        col = "steelblue", -->
+<!-- #                        show.legend = FALSE)  -->
 
-```{r include = FALSE, eval = FALSE}
-library(ggdag)
-# ds2 <- dag_sd %>%
-#   ggdag_dseparated(
-#     from = "X",
-#     to = "Y",
-#     controlling_for = "D",
-#     text = FALSE,
-#     use_labels = "label"
-#   )  +
-#   ggtitle("Meaning ~ Religion + Friends",
-#           subtitle = "Conditioning on a descendent induces collider bias.")
 
-dgg <- dagify(
-  sc ~ m + geo + l + hist,
-  l ~ geo + hist,
-  m ~ geo + l + hist, 
-  labels = c(
-    "sc" = "social complexity",
-    "m" = "gods of cooperation",
-    "l" = "language similarity",
-    "hist" = "shared history"
-  ),
-  exposure = "m",
-  outcome = "sc"
-) 
-
-ds3 <- ggdag::ggdag_adjustment_set(dgg,
-                                   text = FALSE,
-                                   use_labels = "label") + labs(title = "Esimating the Causal Effects of Cooperative Gods on Social Complexity Requires adjusting for geographical proximity, shared cultural history, and language similarities.") + 
-  scale_colour_viridis_d(
-  alpha = 1,
-  begin = 0,
-  end = 1,
-  direction = 1,
-  option = "D",
-  aesthetics = "colour"
-)
-
-
-+ 
-  geom_dag_point(
-   colour = "grey50"
-  )
-  
-
-ds3
-
-
-dagify(
-  sc2 ~ sc1 + m1 + m2 +  geo + l2 + hist2,
-  m2 ~ m1 + geo + l2 + hist2,
-  l2 ~ l1 + geo + hist2,
-  his2 ~ hist1 + geo,
-  m1 ~ geo + l1 + hist1,
-  l1 ~ geo + hist1,
-  labels = c(
-    "sc2" = "social complexity 2",
-    "sc1" = "social complexity 2",
-    "m2" = "gods of cooperation2",
-    "m1" = "gods of cooperation1",
-    "l2" = "language similarity2",
-    "l1" = "language similarity1",
-    "hist1" = "shared history1",
-     "hist2" = "shared history2"
-  ),
-  exposure = "m1",
-  outcome = "sc2"
-) 
-
-
-
-library(ggdag)
-dgg <- dagify(
-  sc2 ~ sc1 + m1 + m2 +  geo + l2 + hist2,
-  m2 ~ m1 + geo + l2 + hist2,
-  l2 ~ l1 + geo + hist2,
-  his2 ~ hist1 + geo,
-  m1 ~ geo + l1 + hist1,
-  l1 ~ geo + hist1,
-  labels = c(
-    "sc2" = "social complexity 2",
-    "sc1" = "social complexity 2",
-    "m2" = "gods of cooperation2",
-    "m1" = "gods of cooperation",
-    "l2" = "language similarity2",
-    "l1" = "language similarity1",
-    "hist1" = "shared history1",
-     "hist2" = "shared history2",
-    "geo1"  = "geographical proximity1",
-    "geo2"  = "geographical proximity2",
-  ),
-  exposure = "m1",
-  outcome = "sc2"
-) 
-
-
-dgg
-# %>%
-#   control_for(c("l","hist"))
-
-ggdag::ggdag_dseparated(dgg, text = TRUE, from = "m1", to = "sc2",
-                        controlling_for = c("l1","hist1","geo"),
-  collider_lines = TRUE) 
-
-ggdag::ggdag_dseparated(dgg, text = TRUE, from = "m1", to = "sc2", collider_lines = TRUE) 
-
-ggdag::ggdag(dgg, text = F,
-             label= "Labels") 
-
-ggdag::ggdag_collider(dgg, text = TRUE) 
-
-ggdag::ggdag_adjustment_set(dgg, text = FALSE, use_labels = "label") 
-
-
-
-dgg <- dagify(
-  mTBI ~ pproc + distress + ex,
-  pproc ~ distress + pflex + tr + ex,
-  pflex ~ ex,
-  ex ~ tr,
-  pproc ~ tr,
-  
-  # labels = c(
-  #   "sc" = "social complexity",
-  #   "m" = "gods of cooperation",
-  #   "l" = "language similarity",
-  #   "hist" = "shared history"
-  # ),
-  exposure = "pproc",
-  outcome = "mTBI"
-) 
-
-ggdag::ggdag_adjustment_set( dgg,text = TRUE,use_labels = "label")
-
-
-dgg <- dagify(
-  mTBI ~ pproc + distress + ex,
-  pproc ~ distress + pflex + tr + ex,
-  pflex ~ ex,
-  ex ~ tr,
-  pflex ~ tr,
-  
-  # labels = c(
-  #   "sc" = "social complexity",
-  #   "m" = "gods of cooperation",
-  #   "l" = "language similarity",
-  #   "hist" = "shared history"
-  # ),
-  exposure = "pflex",
-  outcome = "mTBI"
-) 
-
-ggdag::ggdag_adjustment_set(dgg,text = TRUE) + 
-    geom_dag_label_repel(aes(label = label),
-                       col = "steelblue",
-                       show.legend = FALSE) 
-
-```
 
