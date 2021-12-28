@@ -29,7 +29,7 @@ knitr::opts_chunk$set(
 ```
 
 
-```{r code_folding = FALSE, echo = TRUE}
+```{r code_folding = FALSE, echo = FALSE}
 # packages
 
 # function for installing dependencies
@@ -222,7 +222,7 @@ dag_1 <- dagify(Y ~ Z,
   tidy_dagitty(layout = "tree")
 
 # dag_1 %>%
-#   ggdag()
+# ggdag()
 
 pdm <-
   ggdag::ggdag_dconnected(dag_1, from = "X", to = "Y") + labs(title = "Y ~ X") + theme_dag_blank()
@@ -234,8 +234,8 @@ pdm2 <-
 
 
 # figure
-library(ggplot2)
-library(patchwork)
+library("ggplot2")
+library("patchwork")
 fig2 <-
   pdm + pdm2  + plot_annotation(tag_levels = 'a',
                                       title = "Post-treatment confounding") +  plot_layout(guides = 'collect')
@@ -243,8 +243,6 @@ fig2 <-
 
 # graph
 fig2
-
-# fig2 8 * 6
 
 # practical example, not run
 # dm<- dagify( 
@@ -303,6 +301,7 @@ Lets simulate some data
 
 ```{r}
 set.seed(123)
+
 # Participants
 N <- 100
 
@@ -846,11 +845,8 @@ dag_sd <- dagify(
   control_for("D") 
 
 
-
-
 ds1 <- ggdag::ggdag_dconnected(dag_sd  , text = FALSE,
-                               use_labels = "label") + labs(title = "Meaning ~ Religion") + 
-    geom_dag_point(color = c("steelblue", "red") )
+                               use_labels = "label") + labs(title = "Meaning ~ Religion") #+ geom_dag_point(color = c("steelblue", "red"))
 
 
 
@@ -889,7 +885,7 @@ library(patchwork)
 
 fig4 <-
   ds1 + ds2  + plot_annotation(tag_levels = 'a',
-                                    title = "Descendent confounding")  + plot_layout(guides = 'collect')
+                               title = "Descendent confounding")  + plot_layout(guides = 'collect')
 
 fig4
 # graph figure
@@ -1068,9 +1064,13 @@ For a mediation model we may recover the indirect, direct and total effects as f
 
 ```{r}
 # get posterior distributions
-post <- brms::posterior_samples(m1)
+post <- brms::as_draws_df(m1)
+```
 
+
+```{r}
 # sum and multiply the posterior distributions to obain parameter estimates
+post <- as_tibble(post)
 post2 <- post %>%
   transmute(
     a = b_ms_x_s ,
@@ -1087,7 +1087,7 @@ mcmc_intervals(post2) + theme_classic()
 
 So we can ask how X affects Y  in relation to X's effect on M. 
 
-However, to obtain an unbiased causal estimate of X on Y we only needed to include X We didn't need to condition on M to estimate the *causal* effect of X.
+However, to obtain an unbiased causal estimate of X on Y we only needed to include X.  We didn't need to condition on M to estimate the *causal* effect of X.
 
 ### Masked relationships
 
@@ -1117,8 +1117,9 @@ We can simulate the data:
 set.seed(123)
 n <- 100
 C <- rnorm(n)
-K <- rnorm(n , R - C)
 R <- rnorm(n , C)
+K <- rnorm(n , R - C)
+
 
 d_sim <- data.frame(K = K, R = R, C = C)
 ```
@@ -1126,7 +1127,8 @@ d_sim <- data.frame(K = K, R = R, C = C)
 First we only condition on conservatism
 
 ```{r}
-ms1 <- parameters::model_parameters(lm(K  ~ C, data = d_sim))
+ms1 <- parameters::model_parameters(lm(K  ~ C,
+                                       data = d_sim))
 plot(ms1)
 ms1
 ```
@@ -1172,8 +1174,12 @@ bmlm::mlm_path_plot(xlab = "Focal\n(X)",
 We recover the indirect, direct and total effects as follows:
 
 ```{r}
-post <- brms::posterior_samples(m2)
-post2 <- post %>%
+
+postA <- brms::as_draws_df(m2)
+postA
+
+postA <- as_tibble(postA)
+post2 <- postA %>%
   transmute(
     a = b_R_C ,
     b = b_K_R,
@@ -1205,7 +1211,7 @@ No. The fact that C$\to$R is positive and R$\to$K is negative means that if we w
 
 ## Readings
 
-Required readings are as follows:
+Readings are as follows:
 
 -   @rohrer2018 [link](https://journals.sagepub.com/doi/full/10.1177/2515245917745629)
 -   @barrett2021 [link](https://cran.r-project.org/package=ggdag)

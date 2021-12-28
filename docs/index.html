@@ -462,7 +462,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 
   </style>
 
-  <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+  <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
   <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet"/>
   <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet"/>
   <script src="site_libs/headroom-0.9.4/headroom.min.js"></script>
@@ -2310,7 +2310,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
     color: var(--hover-color, white);
   }</style>
   <!--/radix_placeholder_distill-->
-  <script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
+  <script src="site_libs/header-attrs-2.11.3/header-attrs.js"></script>
   <script src="site_libs/popper-2.6.0/popper.min.js"></script>
   <link href="site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
   <link href="site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
@@ -2430,20 +2430,20 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <span class='st'>"rstanarm"</span>,
   <span class='st'>"bayesplot"</span>,
   <span class='st'>"easystats"</span>,
-  <span class='st'>"ggplot2"</span>
+  <span class='st'>"ggplot2"</span>,
+  <span class='st'>"viridisLite"</span>
 <span class='op'>)</span>
 <span class='fu'>ipak</span><span class='op'>(</span><span class='va'>packages</span><span class='op'>)</span>
 </code></pre>
 </div>
-<pre><code>     coda      plyr   mvtnorm    scales   dagitty     ggdag 
-     TRUE      TRUE      TRUE      TRUE      TRUE      TRUE 
-patchwork tidyverse      brms     rstan  rstanarm bayesplot 
-     TRUE      TRUE      TRUE      TRUE      TRUE      TRUE 
-easystats   ggplot2 
-     TRUE      TRUE </code></pre>
+<pre><code>       coda        plyr     mvtnorm      scales     dagitty 
+       TRUE        TRUE        TRUE        TRUE        TRUE 
+      ggdag   patchwork   tidyverse        brms       rstan 
+       TRUE        TRUE        TRUE        TRUE        TRUE 
+   rstanarm   bayesplot   easystats     ggplot2 viridisLite 
+       TRUE        TRUE        TRUE        TRUE        TRUE </code></pre>
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r">
-
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'>#devtools::install_github("rmcelreath/rethinking")</span>
 <span class='co'># packages</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://tidyverse.tidyverse.org'>"tidyverse"</a></span><span class='op'>)</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://github.com/malcolmbarrett/ggdag'>"ggdag"</a></span><span class='op'>)</span>
@@ -2533,6 +2533,29 @@ Show code
 Figure 1: Ommitted variable bias occurs when a third variable, z, causes x and y to share information
 </p>
 </div>
+</div>
+<div class="layout-chunk" data-layout="l-body-outset">
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'># save graph</span>
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span>
+  <span class='va'>fig1</span>,
+  path <span class='op'>=</span> <span class='fu'>here</span><span class='fu'>::</span><span class='fu'><a href='https://here.r-lib.org//reference/here.html'>here</a></span><span class='op'>(</span><span class='st'>"figs"</span><span class='op'>)</span>,
+  width <span class='op'>=</span> <span class='fl'>10</span>,
+  height <span class='op'>=</span> <span class='fl'>5</span>,
+  units <span class='op'>=</span> <span class='st'>"in"</span>,
+  filename <span class='op'>=</span> <span class='st'>"fig1.jpg"</span>,
+  device <span class='op'>=</span> <span class='st'>'jpeg'</span>,
+  limitsize <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  dpi <span class='op'>=</span> <span class='fl'>1200</span>
+<span class='op'>)</span>
+
+</code></pre>
+</div>
+</details>
 </div>
 <h3 id="simulation-of-omitted-variable-confounding">Simulation of omitted variable confounding</h3>
 <p>We can simulate date that have this causal relationship and ask what would happen were we to regress X on Y without accounting for Z.</p>
@@ -3362,22 +3385,20 @@ Show code
   <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/tidy_dagitty.html'>tidy_dagitty</a></span><span class='op'>(</span>layout <span class='op'>=</span> <span class='st'>"tree"</span><span class='op'>)</span>
 
 <span class='co'># dag_1 %&gt;%</span>
-<span class='co'>#   ggdag()</span>
+<span class='co'># ggdag()</span>
 
 <span class='va'>pdm</span> <span class='op'>&lt;-</span>
   <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/d_relationship.html'>ggdag_dconnected</a></span><span class='op'>(</span><span class='va'>dag_1</span>, from <span class='op'>=</span> <span class='st'>"X"</span>, to <span class='op'>=</span> <span class='st'>"Y"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Y ~ X"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/theme_dag_blank.html'>theme_dag_blank</a></span><span class='op'>(</span><span class='op'>)</span>
 
 
 <span class='va'>pdm2</span> <span class='op'>&lt;-</span>
-  <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/d_relationship.html'>ggdag_dconnected</a></span><span class='op'>(</span><span class='va'>dag_1</span>, from <span class='op'>=</span> <span class='st'>"X"</span>, to <span class='op'>=</span> <span class='st'>"Y"</span>, controlling_for <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Z"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Y ~ X + Z"</span>, subtitle <span class='op'>=</span> <span class='st'>"Adding Z blocks X-&gt;Y, do not condition on Z!"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/theme_dag_blank.html'>theme_dag_blank</a></span><span class='op'>(</span><span class='op'>)</span>
+  <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/d_relationship.html'>ggdag_dconnected</a></span><span class='op'>(</span><span class='va'>dag_1</span>, from <span class='op'>=</span> <span class='st'>"X"</span>, to <span class='op'>=</span> <span class='st'>"Y"</span>, controlling_for <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Z"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Y ~ X + Z"</span>, subtitle <span class='op'>=</span> <span class='st'>"Adding Z blocks X-&gt;Y, do not condition on Z."</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/theme_dag_blank.html'>theme_dag_blank</a></span><span class='op'>(</span><span class='op'>)</span>
 
-<span class='co'># pdm3 &lt;- ggdag::ggdag_adjustment_set(dag_1, exposure = "X",</span>
-<span class='co'>#                                     outcome = "Y") + labs(title = "Do not condition on Z!")</span>
 
 
 <span class='co'># figure</span>
-<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://ggplot2.tidyverse.org'>ggplot2</a></span><span class='op'>)</span>
-<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://patchwork.data-imaginist.com'>patchwork</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://ggplot2.tidyverse.org'>"ggplot2"</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://patchwork.data-imaginist.com'>"patchwork"</a></span><span class='op'>)</span>
 <span class='va'>fig2</span> <span class='op'>&lt;-</span>
   <span class='va'>pdm</span> <span class='op'>+</span> <span class='va'>pdm2</span>  <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>tag_levels <span class='op'>=</span> <span class='st'>'a'</span>,
                                       title <span class='op'>=</span> <span class='st'>"Post-treatment confounding"</span><span class='op'>)</span> <span class='op'>+</span>  <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_layout.html'>plot_layout</a></span><span class='op'>(</span>guides <span class='op'>=</span> <span class='st'>'collect'</span><span class='op'>)</span>
@@ -3395,8 +3416,6 @@ Show code
 </summary>
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r">
-<span class='co'># fig2 8 * 6</span>
-
 <span class='co'># practical example, not run</span>
 <span class='co'># dm&lt;- dagify( </span>
 <span class='co'>#        y ~ m,</span>
@@ -3423,6 +3442,29 @@ Show code
 </div>
 </details>
 </div>
+<div class="layout-chunk" data-layout="l-body-outset">
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'>#save graph</span>
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span>
+  <span class='va'>fig2</span>,
+  path <span class='op'>=</span> <span class='fu'>here</span><span class='fu'>::</span><span class='fu'><a href='https://here.r-lib.org//reference/here.html'>here</a></span><span class='op'>(</span><span class='st'>"figs"</span><span class='op'>)</span>,
+  width <span class='op'>=</span> <span class='fl'>10</span>,
+  height <span class='op'>=</span> <span class='fl'>5</span>,
+  units <span class='op'>=</span> <span class='st'>"in"</span>,
+  filename <span class='op'>=</span> <span class='st'>"fig2.jpg"</span>,
+  device <span class='op'>=</span> <span class='st'>'jpeg'</span>,
+  limitsize <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  dpi <span class='op'>=</span> <span class='fl'>1200</span>
+<span class='op'>)</span>
+
+</code></pre>
+</div>
+</details>
+</div>
 <h3 id="simulation-of-post-treatment-confounding">Simulation of post-treatment confounding</h3>
 <p>What variables do we need to include to obtain an unbiased estimate of X on Y?</p>
 <p>Let’s fill out this example out by imagining an experiment.</p>
@@ -3436,6 +3478,7 @@ Show code
 </summary>
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>123</span><span class='op'>)</span>
+
 <span class='co'># Participants</span>
 <span class='va'>N</span> <span class='op'>&lt;-</span> <span class='fl'>100</span>
 
@@ -4273,30 +4316,83 @@ Show code
 Show code
 </summary>
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'># dag</span>
 <span class='va'>dag_3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/dagify.html'>dagify</a></span><span class='op'>(</span><span class='va'>Z</span> <span class='op'>~</span> <span class='va'>Y</span>,
                 <span class='va'>Z</span> <span class='op'>~</span> <span class='va'>X</span>,
                 exposure <span class='op'>=</span> <span class='st'>"X"</span>,
                 outcome <span class='op'>=</span> <span class='st'>"Y"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/tidy_dagitty.html'>tidy_dagitty</a></span><span class='op'>(</span>layout <span class='op'>=</span> <span class='st'>"fr"</span><span class='op'>)</span>
 
+<span class='co'># check d-connected</span>
+<span class='va'>ddm</span> <span class='op'>&lt;-</span>
+  <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/d_relationship.html'>ggdag_dconnected</a></span><span class='op'>(</span><span class='va'>dag_3</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Y ~ X (no Z)"</span><span class='op'>)</span>
 
-<span class='va'>ddm</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/d_relationship.html'>ggdag_dconnected</a></span><span class='op'>(</span> <span class='va'>dag_3</span> <span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title<span class='op'>=</span> <span class='st'>"Y ~ X (no Z)"</span><span class='op'>)</span>
-
-<span class='va'>ddm2</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/d_relationship.html'>ggdag_dconnected</a></span><span class='op'>(</span> <span class='va'>dag_3</span>, controlling_for <span class='op'>=</span> <span class='st'>"Z"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Y ~ X + Z"</span>, subtitle <span class='op'>=</span> <span class='st'>"Adding Z opens X-&gt;Y"</span><span class='op'>)</span>
-
-
-<span class='co'># ddm3 &lt;- ggdag::ggdag_adjustment_set(dag_3, exposure = "X", </span>
-<span class='co'>#                             outcome = "Y") + labs(title= "Do not condition on Z!")</span>
-
+<span class='co'># check d-connected controlling for Z</span>
+<span class='va'>ddm2</span> <span class='op'>&lt;-</span>
+  <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/d_relationship.html'>ggdag_dconnected</a></span><span class='op'>(</span><span class='va'>dag_3</span>, controlling_for <span class='op'>=</span> <span class='st'>"Z"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Y ~ X + Z"</span>, subtitle <span class='op'>=</span> <span class='st'>"Adding Z opens X-&gt;Y"</span><span class='op'>)</span>
 
 
-<span class='co'># Collider bias in experiments</span>
 
-
+<span class='co'># experiment</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://github.com/malcolmbarrett/ggdag'>ggdag</a></span><span class='op'>)</span>
 <span class='va'>dg_suz</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/dagify.html'>dagify</a></span><span class='op'>(</span>
+ <span class='va'>b</span> <span class='op'>~</span>  <span class='va'>im</span> <span class='op'>+</span> <span class='va'>ordr</span> <span class='op'>+</span> <span class='va'>rel</span> <span class='op'>+</span> <span class='va'>sr</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span>  <span class='va'>st</span> <span class='op'>+</span> <span class='va'>cny</span>,
+  <span class='va'>sr</span> <span class='op'>~</span> <span class='va'>rel</span> <span class='op'>+</span> <span class='va'>cny</span>, 
+  <span class='va'>rel</span> <span class='op'>~</span>  <span class='va'>age</span> <span class='op'>+</span> <span class='va'>ses</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span> <span class='va'>male</span> <span class='op'>+</span> <span class='va'>cny</span>,
+  <span class='va'>ses</span> <span class='op'>~</span> <span class='va'>cny</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span> <span class='va'>age</span>,
+  <span class='va'>edu</span> <span class='op'>~</span> <span class='va'>cny</span> <span class='op'>+</span> <span class='va'>male</span> <span class='op'>+</span> <span class='va'>age</span>,
+  <span class='va'>im</span> <span class='op'>~</span> <span class='va'>mem</span> <span class='op'>+</span> <span class='va'>rel</span> <span class='op'>+</span> <span class='va'>cny</span> <span class='op'>+</span> <span class='va'>sr</span> <span class='op'>+</span> <span class='va'>edu</span>,
+  <span class='va'>mem</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span> <span class='va'>ordr</span>,
+  exposure <span class='op'>=</span> <span class='st'>"sr"</span>,
+  outcome <span class='op'>=</span> <span class='st'>"b"</span>,
+  labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
+    <span class='st'>"b"</span> <span class='op'>=</span> <span class='st'>"statement credibility\n(outcome)"</span>,
+    <span class='st'>"sr"</span> <span class='op'>=</span> <span class='st'>"source\n(exposure)"</span>,
+    <span class='st'>"st"</span> <span class='op'>=</span> <span class='st'>"statement"</span>,
+    <span class='st'>"im"</span> <span class='op'>=</span> <span class='st'>"statement importance"</span>,
+    <span class='st'>"mem"</span> <span class='op'>=</span> <span class='st'>"statement memory"</span>,
+    <span class='st'>"rel"</span> <span class='op'>=</span> <span class='st'>"religiosity"</span>,
+    <span class='st'>"cny"</span> <span class='op'>=</span> <span class='st'>"country"</span>,
+    <span class='st'>"male"</span> <span class='op'>=</span> <span class='st'>"male"</span>,
+    <span class='st'>"ordr"</span> <span class='op'>=</span> <span class='st'>"order"</span>,
+    <span class='st'>"ses"</span> <span class='op'>=</span> <span class='st'>"perceived SES"</span>,
+    <span class='st'>"edu"</span> <span class='op'>=</span> <span class='st'>"education"</span>,
+    <span class='st'>"age"</span> <span class='op'>=</span> <span class='st'>"age"</span>
+  <span class='op'>)</span> <span class='op'>)</span> 
+
+<span class='co'>#  not run</span>
+<span class='co'># text_size &lt;- 40</span>
+<span class='co'># dd4 &lt;- ggdag::ggdag_collider(</span>
+<span class='co'>#   dg_suz,</span>
+<span class='co'>#   text = FALSE,</span>
+<span class='co'>#   use_labels = "label",</span>
+<span class='co'>#   node_size = 10,</span>
+<span class='co'># #  label_size = 10,</span>
+<span class='co'>#   text_col = "white",</span>
+<span class='co'>#   label_col = "white",</span>
+<span class='co'># ) +</span>
+<span class='co'>#   #geom_dag_text(size = 18) +</span>
+<span class='co'>#   # geom_dag_node(size = 40) +</span>
+<span class='co'>#   geom_dag_collider_edges(</span>
+<span class='co'>#     size = 0.6 , show.legend = NA) +</span>
+<span class='co'>#     # angle = 90,</span>
+<span class='co'>#     # ncp = 5,</span>
+<span class='co'>#     # arrow = NULL,</span>
+<span class='co'>#     # lineend = "butt",</span>
+<span class='co'>#     # na.rm = FALSE,</span>
+<span class='co'>#     # show.legend = NA) +</span>
+<span class='co'>#     # geom_dag_text(colour = "steelblue")</span>
+<span class='co'>#   #  scale_colour_viridis_d(option = "cividis") +</span>
+<span class='co'>#     scale_color_viridis_d(</span>
+<span class='co'>#      # name = "d-relationship",</span>
+<span class='co'>#       end = .8</span>
+<span class='co'>#     )</span>
+
+
+<span class='co'># colliders</span>
+<span class='va'>dd4</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/dagify.html'>dagify</a></span><span class='op'>(</span>
   <span class='va'>b</span> <span class='op'>~</span>  <span class='va'>im</span> <span class='op'>+</span> <span class='va'>ordr</span> <span class='op'>+</span> <span class='va'>rel</span> <span class='op'>+</span> <span class='va'>sr</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span>  <span class='va'>st</span> <span class='op'>+</span> <span class='va'>cny</span>,
+  <span class='va'>sr</span> <span class='op'>~</span> <span class='va'>rel</span> <span class='op'>+</span> <span class='va'>cny</span>, 
   <span class='va'>rel</span> <span class='op'>~</span>  <span class='va'>age</span> <span class='op'>+</span> <span class='va'>ses</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span> <span class='va'>male</span> <span class='op'>+</span> <span class='va'>cny</span>,
   <span class='va'>ses</span> <span class='op'>~</span> <span class='va'>cny</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span> <span class='va'>age</span>,
   <span class='va'>edu</span> <span class='op'>~</span> <span class='va'>cny</span> <span class='op'>+</span> <span class='va'>male</span> <span class='op'>+</span> <span class='va'>age</span>,
@@ -4319,52 +4415,146 @@ Show code
     <span class='st'>"age"</span> <span class='op'>=</span> <span class='st'>"age"</span>
   <span class='op'>)</span>
 <span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/control_for.html'>control_for</a></span><span class='op'>(</span><span class='st'>"rel"</span><span class='op'>)</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/tidy_dagitty.html'>tidy_dagitty</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/colliders.html'>node_collider</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>
+    x <span class='op'>=</span> <span class='va'>x</span>,
+    y <span class='op'>=</span> <span class='va'>y</span>,
+    xend <span class='op'>=</span> <span class='va'>xend</span>,
+    yend <span class='op'>=</span> <span class='va'>yend</span> ,
+    <span class='co'># shape = colliders,</span>
+    col <span class='op'>=</span> <span class='va'>colliders</span>
+  <span class='op'>)</span><span class='op'>)</span>  <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_viridis.html'>scale_color_viridis_d</a></span><span class='op'>(</span><span class='co'>#name = "d-relationship",</span>
+    na.value <span class='op'>=</span> <span class='st'>"grey85"</span>,
+    option <span class='op'>=</span> <span class='st'>"H"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/geom_dag_edges.html'>geom_dag_edges</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='co'>#  geom_dag_collider_edges() +</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/node_point.html'>geom_dag_node</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/repel.html'>geom_dag_label_repel</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>label <span class='op'>=</span> <span class='va'>label</span><span class='op'>)</span>,
+                       col <span class='op'>=</span> <span class='st'>"steelblue"</span>,
+                       show.legend <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='co'>#  geom_dag_text(col = "white") +</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/theme_dag_blank.html'>theme_dag</a></span><span class='op'>(</span><span class='op'>)</span>  <span class='op'>+</span>
+  <span class='co'>#+ scale_adjusted() +</span>
+  <span class='co'># expand_plot(expand_y = expansion(c(0.2, 0.2))) +</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Graph of collider relationships among variables \nin an experiment (ignoring exposure and outcome.)"</span><span class='op'>)</span>
 
-<span class='va'>text_size</span> <span class='op'>&lt;-</span> <span class='fl'>40</span>
-<span class='va'>dd4</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/colliders.html'>ggdag_collider</a></span><span class='op'>(</span><span class='va'>dg_suz</span>, text <span class='op'>=</span> <span class='cn'>FALSE</span>, use_labels <span class='op'>=</span> <span class='st'>"label"</span>, node_size <span class='op'>=</span> <span class='fl'>10</span>, label_size <span class='op'>=</span> <span class='fl'>10</span><span class='op'>)</span> <span class='op'>+</span>  
-  <span class='co'>#geom_dag_text(size = 18) +</span>
- <span class='co'># geom_dag_node(size = 40) +</span>
-  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/geom_dag_collider_edges.html'>geom_dag_collider_edges</a></span><span class='op'>(</span>
-  size <span class='op'>=</span> <span class='fl'>0.6</span> <span class='co'>#,</span>
-  <span class='co'># curvature = 0.5,</span>
-  <span class='co'># angle = 90,</span>
-  <span class='co'># ncp = 5,</span>
-  <span class='co'># arrow = NULL,</span>
-  <span class='co'># lineend = "butt",</span>
-  <span class='co'># na.rm = FALSE,</span>
-  <span class='co'># show.legend = NA,</span>
-  <span class='co'># inherit.aes = TRUE</span>
-<span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Colliders in experiment"</span><span class='op'>)</span>
-                                                        
-<span class='va'>dd5</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/adjustment_sets.html'>ggdag_adjustment_set</a></span><span class='op'>(</span><span class='va'>dg_suz</span>, exposure <span class='op'>=</span> <span class='st'>"rel"</span>, outcome <span class='op'>=</span> <span class='st'>"b"</span>, text <span class='op'>=</span> <span class='cn'>FALSE</span>, use_labels <span class='op'>=</span> <span class='st'>"label"</span>, node_size <span class='op'>=</span> <span class='fl'>10</span>, label_size <span class='op'>=</span> <span class='fl'>10</span><span class='op'>)</span>  <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Adjustment sets"</span><span class='op'>)</span>                                                            
-                                                                
+<span class='co'># Adjustment set</span>
+<span class='va'>dd5</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/dagify.html'>dagify</a></span><span class='op'>(</span>
+  <span class='va'>b</span> <span class='op'>~</span>  <span class='va'>im</span> <span class='op'>+</span> <span class='va'>ordr</span> <span class='op'>+</span> <span class='va'>rel</span> <span class='op'>+</span> <span class='va'>sr</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span>  <span class='va'>st</span> <span class='op'>+</span> <span class='va'>cny</span>,
+  <span class='va'>sr</span> <span class='op'>~</span> <span class='va'>rel</span> <span class='op'>+</span> <span class='va'>cny</span>, 
+  <span class='va'>rel</span> <span class='op'>~</span>  <span class='va'>age</span> <span class='op'>+</span> <span class='va'>ses</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span> <span class='va'>male</span> <span class='op'>+</span> <span class='va'>cny</span>,
+  <span class='va'>ses</span> <span class='op'>~</span> <span class='va'>cny</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span> <span class='va'>age</span>,
+  <span class='va'>edu</span> <span class='op'>~</span> <span class='va'>cny</span> <span class='op'>+</span> <span class='va'>male</span> <span class='op'>+</span> <span class='va'>age</span>,
+  <span class='va'>im</span> <span class='op'>~</span> <span class='va'>mem</span> <span class='op'>+</span> <span class='va'>rel</span> <span class='op'>+</span> <span class='va'>cny</span> <span class='op'>+</span> <span class='va'>sr</span> <span class='op'>+</span> <span class='va'>edu</span>,
+  <span class='va'>mem</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>edu</span> <span class='op'>+</span> <span class='va'>ordr</span>,
+  exposure <span class='op'>=</span> <span class='st'>"sr"</span>,
+  outcome <span class='op'>=</span> <span class='st'>"b"</span>,
+  labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
+    <span class='st'>"b"</span> <span class='op'>=</span> <span class='st'>"statement credibility\n(outcome)"</span>,
+    <span class='st'>"sr"</span> <span class='op'>=</span> <span class='st'>"source\n(exposure)"</span>,
+    <span class='st'>"st"</span> <span class='op'>=</span> <span class='st'>"statement"</span>,
+    <span class='st'>"im"</span> <span class='op'>=</span> <span class='st'>"statement importance"</span>,
+    <span class='st'>"mem"</span> <span class='op'>=</span> <span class='st'>"statement memory"</span>,
+    <span class='st'>"rel"</span> <span class='op'>=</span> <span class='st'>"religiosity"</span>,
+    <span class='st'>"cny"</span> <span class='op'>=</span> <span class='st'>"country"</span>,
+    <span class='st'>"male"</span> <span class='op'>=</span> <span class='st'>"male"</span>,
+    <span class='st'>"ordr"</span> <span class='op'>=</span> <span class='st'>"order"</span>,
+    <span class='st'>"ses"</span> <span class='op'>=</span> <span class='st'>"perceived SES"</span>,
+    <span class='st'>"edu"</span> <span class='op'>=</span> <span class='st'>"education"</span>,
+    <span class='st'>"age"</span> <span class='op'>=</span> <span class='st'>"age"</span>
+  <span class='op'>)</span>
+<span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/adjustment_sets.html'>ggdag_adjustment_set</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_viridis.html'>scale_color_viridis_d</a></span><span class='op'>(</span><span class='co'>#name = "d-relationship",</span>
+    na.value <span class='op'>=</span> <span class='st'>"grey85"</span>,
+    option <span class='op'>=</span> <span class='st'>"E"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/geom_dag_edges.html'>geom_dag_edges</a></span><span class='op'>(</span>show.legend <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='co'># geom_dag_collider_edges() +</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/node_point.html'>geom_dag_node</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/repel.html'>geom_dag_label_repel</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>label <span class='op'>=</span> <span class='va'>label</span><span class='op'>)</span>,
+                       col <span class='op'>=</span> <span class='st'>"steelblue"</span>,
+                       show.legend <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='co'>#  geom_dag_text(col = "white") +</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/theme_dag_blank.html'>theme_dag</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='co'># scale_adjusted() +</span>
+  <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/expand_plot.html'>expand_plot</a></span><span class='op'>(</span>expand_y <span class='op'>=</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/expansion.html'>expansion</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.2</span>, <span class='fl'>0.2</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"To obtain an unbiased estimate of source on credibility among people who\nvary by religiosity we need only condition on religiosity and country."</span><span class='op'>)</span>
+
+<span class='co'># not run</span>
+<span class='co'># dd5 &lt;-</span>
+<span class='co'>#   ggdag::ggdag_adjustment_set(</span>
+<span class='co'>#     dg_suz,</span>
+<span class='co'>#     exposure = "rel",</span>
+<span class='co'>#     outcome = "b",</span>
+<span class='co'>#     text = FALSE,</span>
+<span class='co'>#     use_labels = "label",</span>
+<span class='co'>#     node_size = 10,</span>
+<span class='co'>#     label_size = 10</span>
+<span class='co'>#   ) +</span>
+<span class='co'>#      scale_color_viridis_d(</span>
+<span class='co'>#     #  name = "d-relationship",</span>
+<span class='co'>#       na.value = "grey85",</span>
+<span class='co'>#       end = .4</span>
+<span class='co'>#     ) +</span>
+<span class='co'>#   labs(title = "Adjustment sets") + geom_dag_text(na.rm = FALSE,</span>
+<span class='co'>#                                                   show.legend = FALSE,</span>
+<span class='co'>#                                                   inherit.aes = TRUE)</span>
+<span class='co'>#</span>
+
+
 <span class='co'># figure</span>
 
 <span class='co'># not used</span>
-<span class='va'>fig3a</span> <span class='op'>&lt;-</span><span class='op'>(</span><span class='va'>ddm</span> <span class='op'>+</span> <span class='va'>ddm2</span><span class='op'>)</span><span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>tag_levels <span class='op'>=</span> <span class='st'>'a'</span>, title <span class='op'>=</span> <span class='st'>"Collider Bias"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_layout.html'>plot_layout</a></span><span class='op'>(</span>guides <span class='op'>=</span> <span class='st'>'collect'</span><span class='op'>)</span>
-
+<span class='co'># fig3a &lt;-</span>
+<span class='co'>#   (ddm + ddm2) + plot_annotation(tag_levels = 'a', title = "Collider Bias")# + plot_layout(guides = 'collect')</span>
+<span class='co'># </span>
 
 <span class='co'># not used</span>
-<span class='va'>fig3b</span> <span class='op'>&lt;-</span> <span class='op'>(</span><span class='va'>dd4</span>  <span class='op'>+</span> <span class='va'>dd5</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>tag_levels <span class='op'>=</span> <span class='st'>'a'</span>, title <span class='op'>=</span> <span class='st'>"Collider Bias in Experiments"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_layout.html'>plot_layout</a></span><span class='op'>(</span>guides <span class='op'>=</span> <span class='st'>'collect'</span><span class='op'>)</span>
+<span class='co'># fig3b &lt;-</span>
+<span class='co'>#   (dd4  + dd5) + plot_annotation(tag_levels = 'a', title = "Collider Bias in Experiments")# + plot_layout(guides = 'collect')</span>
 
 
-
-<span class='va'>fig3</span> <span class='op'>&lt;-</span> <span class='op'>(</span><span class='va'>ddm</span> <span class='op'>+</span> <span class='va'>ddm2</span> <span class='op'>)</span><span class='op'>/</span> <span class='op'>(</span><span class='va'>dd4</span>  <span class='op'>+</span> <span class='va'>dd5</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>tag_levels <span class='op'>=</span> <span class='st'>'a'</span>, title <span class='op'>=</span> <span class='st'>"Collider Bias"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_layout.html'>plot_layout</a></span><span class='op'>(</span>guides <span class='op'>=</span> <span class='st'>'collect'</span><span class='op'>)</span>
+<span class='co'># graph</span>
+<span class='va'>fig3</span> <span class='op'>&lt;-</span>
+  <span class='op'>(</span><span class='va'>ddm</span> <span class='op'>+</span> <span class='va'>ddm2</span><span class='op'>)</span> <span class='op'>/</span> <span class='op'>(</span><span class='va'>dd4</span>  <span class='op'>+</span> <span class='va'>dd5</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>tag_levels <span class='op'>=</span> <span class='st'>'a'</span>, title <span class='op'>=</span> <span class='st'>"Collider Bias"</span><span class='op'>)</span> <span class='co'># + plot_layout(guides = 'collect')</span>
 
 <span class='va'>fig3</span> <span class='co'># 12 X16)</span>
 </code></pre>
 </div>
 </details>
-<img src="index_files/figure-html5/unnamed-chunk-9-1.png" width="1536" />
+<img src="index_files/figure-html5/unnamed-chunk-10-1.png" width="1536" />
 <details>
 <summary>
 Show code
 </summary>
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r">
+<span class='co'># not used</span>
 <span class='co'># subtitle = "Experimental control variables may induce collider bias.\nOnly a subset of experimental controls are required \nto close backdoor paths."</span>
+</code></pre>
+</div>
+</details>
+</div>
+<div class="layout-chunk" data-layout="l-body-outset">
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'>#save graph</span>
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span>
+  <span class='va'>fig3</span>,
+  path <span class='op'>=</span> <span class='fu'>here</span><span class='fu'>::</span><span class='fu'><a href='https://here.r-lib.org//reference/here.html'>here</a></span><span class='op'>(</span><span class='st'>"figs"</span><span class='op'>)</span>,
+  width <span class='op'>=</span> <span class='fl'>15</span>,
+  height <span class='op'>=</span> <span class='fl'>15</span>,
+  units <span class='op'>=</span> <span class='st'>"in"</span>,
+  filename <span class='op'>=</span> <span class='st'>"fig3.jpg"</span>,
+  device <span class='op'>=</span> <span class='st'>'jpeg'</span>,
+  limitsize <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  dpi <span class='op'>=</span> <span class='fl'>1200</span>
+<span class='op'>)</span>
 </code></pre>
 </div>
 </details>
@@ -4392,7 +4582,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-10-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-12-1.png" width="1536" /></p>
 </div>
 <p>When two arrows enter into an variable, it opens a path of information between the two variables: trustworth and newsworthy, with each negatively related to the other.</p>
 <p>Often this openning of information has disasterous implications. McElreath makes the point that <em>in the human sciences, included variable bias is a woefully underrated problem</em>.</p>
@@ -4413,7 +4603,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-11-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-13-1.png" width="1536" /></p>
 </div>
 <p>To better avoid the pitfalls of collider bias, applied scientists can use the <code>ggdag package</code> to find colliders conditional on an assumed graph:</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -4429,7 +4619,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-12-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-14-1.png" width="1536" /></p>
 </div>
 <p>The following simulation by Solomon Kurz illustrates the selection-distortion effect, which Richard McElreath discusses in <em>Statistical Rethinking</em>. Kurz’s code is available the CC0-1.0 License here: <a href="https://github.com/ASKurz/Statistical_Rethinking_with_brms_ggplot2_and_the_tidyverse_2_ed" class="uri">https://github.com/ASKurz/Statistical_Rethinking_with_brms_ggplot2_and_the_tidyverse_2_ed</a></p>
 <p>And his book is here: <a href="https://bookdown.org/ajkurz/Statistical_Rethinking_recoded/" class="uri">https://bookdown.org/ajkurz/Statistical_Rethinking_recoded/</a></p>
@@ -4520,7 +4710,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-15-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-17-1.png" width="1536" /></p>
 </div>
 <p>Notice, once we know a proposal has been selected, it if is newsworthy we can predict that it is less trustworthy. Our simulation produces this prediction even though we simulated a world in which there is no relationship between trustworthiness and newsworthiness.</p>
 <p>Selection bias is commonplace. Imagine that religious service attendance reduces psychological distress and that having a sense of meaning in life reduces distress. Imagine that church attenance does not affect sense of meaning in life. “Controlling for” distress will make it appear as though church attendance causes meaning in life because distress “shares” information.</p>
@@ -4550,7 +4740,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-16-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-18-1.png" width="1536" /></p>
 </div>
 <h3 id="simulation-of-collider-confounding-within-experiments">Simulation of collider confounding within experiments</h3>
 <p>We noted that conditioning on a post-treatment variable can induce bias by blocking the path between the experimental manipulation and the outcome. However, such conditioning can open a path even when there is no experimental effect.</p>
@@ -4582,7 +4772,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-17-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-19-1.png" width="1536" /></p>
 </div>
 <p>How do we avoid collider bias here?</p>
 <p>Note what happens if we condition on cohesion?</p>
@@ -4599,7 +4789,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-18-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-20-1.png" width="1536" /></p>
 </div>
 <p>The moral of this story: don’t condition on a post-treatment variable!</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -4627,7 +4817,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-19-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-21-1.png" width="1536" /></p>
 </div>
 <h2 id="taxonomy-of-confounding">Taxonomy of confounding</h2>
 <p>There is good news.</p>
@@ -4647,7 +4837,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-20-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-22-1.png" width="1536" /></p>
 </div>
 <h3 id="the-pipe-fully-mediated-effects">The Pipe (fully mediated effects)</h3>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -4667,7 +4857,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-21-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-23-1.png" width="1536" /></p>
 </div>
 <h3 id="the-collider">The Collider</h3>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -4681,7 +4871,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-22-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-24-1.png" width="1536" /></p>
 </div>
 <h3 id="the-descendant">The Descendant</h3>
 <p>If we “control for” a descendant of a collider, we will introduce collider bias.</p>
@@ -4692,8 +4882,8 @@ Show code
 </summary>
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dag_sd</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/dagify.html'>dagify</a></span><span class='op'>(</span>
-  <span class='va'>Z</span> <span class='op'>~</span> <span class='va'>X</span>,
   <span class='va'>Z</span> <span class='op'>~</span> <span class='va'>Y</span>,
+  <span class='va'>Z</span> <span class='op'>~</span> <span class='va'>X</span>,
   <span class='va'>D</span> <span class='op'>~</span> <span class='va'>Z</span>,
   labels <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
     <span class='st'>"Z"</span> <span class='op'>=</span> <span class='st'>"Distress"</span>,
@@ -4707,10 +4897,8 @@ Show code
   <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/control_for.html'>control_for</a></span><span class='op'>(</span><span class='st'>"D"</span><span class='op'>)</span> 
 
 
-
-
 <span class='va'>ds1</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/d_relationship.html'>ggdag_dconnected</a></span><span class='op'>(</span><span class='va'>dag_sd</span>  , text <span class='op'>=</span> <span class='cn'>FALSE</span>,
-                               use_labels <span class='op'>=</span> <span class='st'>"label"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Meaning ~ Religion"</span><span class='op'>)</span>
+                               use_labels <span class='op'>=</span> <span class='st'>"label"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Meaning ~ Religion"</span><span class='op'>)</span> <span class='co'>#+ geom_dag_point(color = c("steelblue", "red"))</span>
 
 
 
@@ -4723,9 +4911,7 @@ Show code
     use_labels <span class='op'>=</span> <span class='st'>"label"</span>
   <span class='op'>)</span>  <span class='op'>+</span>
   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>ggtitle</a></span><span class='op'>(</span><span class='st'>"Meaning ~ Religion + Friends"</span>,
-          subtitle <span class='op'>=</span> <span class='st'>"Conditioning on a descendent induces collider bias"</span><span class='op'>)</span>
-
-
+          subtitle <span class='op'>=</span> <span class='st'>"Conditioning on a descendent induces collider bias."</span><span class='op'>)</span> 
 
 <span class='va'>dgg</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/dagify.html'>dagify</a></span><span class='op'>(</span>
   <span class='va'>Z</span> <span class='op'>~</span> <span class='va'>X</span>,
@@ -4743,7 +4929,7 @@ Show code
 
 <span class='va'>ds3</span> <span class='op'>&lt;-</span> <span class='fu'>ggdag</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/ggdag/man/adjustment_sets.html'>ggdag_adjustment_set</a></span><span class='op'>(</span><span class='va'>dgg</span>,
                                    text <span class='op'>=</span> <span class='cn'>FALSE</span>,
-                                   use_labels <span class='op'>=</span> <span class='st'>"label"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Do not condition on Friends!"</span><span class='op'>)</span>
+                                   use_labels <span class='op'>=</span> <span class='st'>"label"</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>title <span class='op'>=</span> <span class='st'>"Do not condition on Friends"</span><span class='op'>)</span> 
 
 
 
@@ -4751,13 +4937,13 @@ Show code
 
 <span class='va'>fig4</span> <span class='op'>&lt;-</span>
   <span class='va'>ds1</span> <span class='op'>+</span> <span class='va'>ds2</span>  <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>tag_levels <span class='op'>=</span> <span class='st'>'a'</span>,
-                                    title <span class='op'>=</span> <span class='st'>"Descendent confounding"</span><span class='op'>)</span>  <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_layout.html'>plot_layout</a></span><span class='op'>(</span>guides <span class='op'>=</span> <span class='st'>'collect'</span><span class='op'>)</span>
+                               title <span class='op'>=</span> <span class='st'>"Descendent confounding"</span><span class='op'>)</span>  <span class='op'>+</span> <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_layout.html'>plot_layout</a></span><span class='op'>(</span>guides <span class='op'>=</span> <span class='st'>'collect'</span><span class='op'>)</span>
 
 <span class='va'>fig4</span>
 </code></pre>
 </div>
 </details>
-<img src="index_files/figure-html5/unnamed-chunk-23-1.png" width="1536" />
+<img src="index_files/figure-html5/unnamed-chunk-25-1.png" width="1536" />
 <details>
 <summary>
 Show code
@@ -4765,6 +4951,29 @@ Show code
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='co'># graph figure</span>
  <span class='co'># 8 x 6</span>
+</code></pre>
+</div>
+</details>
+</div>
+<div class="layout-chunk" data-layout="l-body-outset">
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'>#save graph</span>
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span>
+  <span class='va'>fig4</span>,
+  path <span class='op'>=</span> <span class='fu'>here</span><span class='fu'>::</span><span class='fu'><a href='https://here.r-lib.org//reference/here.html'>here</a></span><span class='op'>(</span><span class='st'>"figs"</span><span class='op'>)</span>,
+  width <span class='op'>=</span> <span class='fl'>10</span>,
+  height <span class='op'>=</span> <span class='fl'>10</span>,
+  units <span class='op'>=</span> <span class='st'>"in"</span>,
+  filename <span class='op'>=</span> <span class='st'>"fig4.jpg"</span>,
+  device <span class='op'>=</span> <span class='st'>'jpeg'</span>,
+  limitsize <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  dpi <span class='op'>=</span> <span class='fl'>1200</span>
+<span class='op'>)</span>
+
 </code></pre>
 </div>
 </details>
@@ -4825,7 +5034,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-25-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-28-1.png" width="1536" /></p>
 </div>
 <p>What should we condition on if we are interested in the causal effect of changes in X on changes in Y?</p>
 <p>We can pose the question to <code>ggdag</code>:</p>
@@ -4841,7 +5050,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-26-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-29-1.png" width="1536" /></p>
 </div>
 <p>‘Backdoor Paths Unconditionally Closed’ means that, assuming the DAG we have drawn is correct, we may obtain an unbiased estimate of X on Y without including additional variables.</p>
 <p>Later we shall understand why this is the case.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
@@ -4858,7 +5067,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-27-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-30-1.png" width="1536" /></p>
 </div>
 <p>In this case, d-connection is a good thing because we can estimate the causal effect of X on Y. In other cases, d-connection will spoil the model. We have seen this for omitted variable bias. X and Y are d-separated conditional on Z, and that’s our motivation for including Z! These concepts are tricky, but they get easier with practice.</p>
 <p>To add some grit to our exploration of mediation lets simulate data that are consistent with our mediation DAG</p>
@@ -6088,7 +6297,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-32-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-35-1.png" width="1536" /></p>
 </div>
 <p>For a mediation model we may recover the indirect, direct and total effects as follow:</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -6098,9 +6307,19 @@ Show code
 </summary>
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='co'># get posterior distributions</span>
-<span class='va'>post</span> <span class='op'>&lt;-</span> <span class='fu'>brms</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/brms/man/posterior_samples.brmsfit.html'>posterior_samples</a></span><span class='op'>(</span><span class='va'>m1</span><span class='op'>)</span>
-
-<span class='co'># sum and multiply the posterior distributions to obain parameter estimates</span>
+<span class='va'>post</span> <span class='op'>&lt;-</span> <span class='fu'>brms</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/brms/man/draws-brms.html'>as_draws_df</a></span><span class='op'>(</span><span class='va'>m1</span><span class='op'>)</span>
+</code></pre>
+</div>
+</details>
+</div>
+<div class="layout-chunk" data-layout="l-body-outset">
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'># sum and multiply the posterior distributions to obain parameter estimates</span>
+<span class='va'>post</span> <span class='op'>&lt;-</span> <span class='fu'>as_tibble</span><span class='op'>(</span><span class='va'>post</span><span class='op'>)</span>
 <span class='va'>post2</span> <span class='op'>&lt;-</span> <span class='va'>post</span> <span class='op'>%&gt;%</span>
   <span class='fu'>transmute</span><span class='op'>(</span>
     a <span class='op'>=</span> <span class='va'>b_ms_x_s</span> ,
@@ -6116,10 +6335,10 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-33-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-37-1.png" width="1536" /></p>
 </div>
 <p>So we can ask how X affects Y in relation to X’s effect on M.</p>
-<p>However, to obtain an unbiased causal estimate of X on Y we only needed to include X We didn’t need to condition on M to estimate the <em>causal</em> effect of X.</p>
+<p>However, to obtain an unbiased causal estimate of X on Y we only needed to include X. We didn’t need to condition on M to estimate the <em>causal</em> effect of X.</p>
 <h3 id="masked-relationships">Masked relationships</h3>
 <p>Imagine two variables were to affect an outcome. Both are correlated with each other. One affects the outcome positively and the other affects the outcome negatively. How shall we investigate the causal role of the focal predictor?</p>
 <p>Consider two correlated variables that jointly predict Political conservatism (C), religion (R). Imagine that one variable has a positive effect and the other has a negative effect on distress (K6).</p>
@@ -6142,7 +6361,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-34-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-38-1.png" width="1536" /></p>
 </div>
 <p>We can simulate the data:</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -6159,6 +6378,7 @@ Show code
 <span class='va'>R</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='va'>n</span> , <span class='va'>C</span><span class='op'>)</span>
 <span class='va'>K</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='va'>n</span> , <span class='va'>R</span> <span class='op'>-</span> <span class='va'>C</span><span class='op'>)</span>
 
+
 <span class='va'>d_sim</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span><span class='op'>(</span>K <span class='op'>=</span> <span class='va'>K</span>, R <span class='op'>=</span> <span class='va'>R</span>, C <span class='op'>=</span> <span class='va'>C</span><span class='op'>)</span>
 </code></pre>
 </div>
@@ -6171,12 +6391,13 @@ Show code
 Show code
 </summary>
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>ms1</span> <span class='op'>&lt;-</span> <span class='fu'>parameters</span><span class='fu'>::</span><span class='fu'><a href='https://easystats.github.io/parameters/reference/model_parameters.html'>model_parameters</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/stats/lm.html'>lm</a></span><span class='op'>(</span><span class='va'>K</span>  <span class='op'>~</span> <span class='va'>C</span>, data <span class='op'>=</span> <span class='va'>d_sim</span><span class='op'>)</span><span class='op'>)</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>ms1</span> <span class='op'>&lt;-</span> <span class='fu'>parameters</span><span class='fu'>::</span><span class='fu'><a href='https://easystats.github.io/parameters/reference/model_parameters.html'>model_parameters</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/stats/lm.html'>lm</a></span><span class='op'>(</span><span class='va'>K</span>  <span class='op'>~</span> <span class='va'>C</span>,
+                                       data <span class='op'>=</span> <span class='va'>d_sim</span><span class='op'>)</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>ms1</span><span class='op'>)</span>
 </code></pre>
 </div>
 </details>
-<img src="index_files/figure-html5/unnamed-chunk-36-1.png" width="1536" />
+<img src="index_files/figure-html5/unnamed-chunk-40-1.png" width="1536" />
 <details>
 <summary>
 Show code
@@ -6203,7 +6424,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-37-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-41-1.png" width="1536" /></p>
 </div>
 <p>When we add both C and R, we see them “pop” in opposite directions, as is typical of masking:</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -6217,7 +6438,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-38-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-42-1.png" width="1536" /></p>
 </div>
 <p>Mediation model</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -6254,7 +6475,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-40-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-44-1.png" width="1536" /></p>
 </div>
 <p>We recover the indirect, direct and total effects as follows:</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -6263,8 +6484,45 @@ Show code
 Show code
 </summary>
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>post</span> <span class='op'>&lt;-</span> <span class='fu'>brms</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/brms/man/posterior_samples.brmsfit.html'>posterior_samples</a></span><span class='op'>(</span><span class='va'>m2</span><span class='op'>)</span>
-<span class='va'>post2</span> <span class='op'>&lt;-</span> <span class='va'>post</span> <span class='op'>%&gt;%</span>
+<pre class="sourceCode r"><code class="sourceCode r">
+<span class='va'>postA</span> <span class='op'>&lt;-</span> <span class='fu'>brms</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/brms/man/draws-brms.html'>as_draws_df</a></span><span class='op'>(</span><span class='va'>m2</span><span class='op'>)</span>
+<span class='va'>postA</span>
+</code></pre>
+</div>
+</details>
+<pre><code># A draws_df: 1000 iterations, 4 chains, and 8 variables
+   b_R_Intercept b_K_Intercept b_R_C b_K_C b_K_R sigma_R
+1          0.041         0.204  0.97  -1.1  1.12    1.22
+2         -0.131         0.207  0.99  -1.1  0.82    1.02
+3         -0.014         0.107  1.05  -1.3  1.17    1.05
+4         -0.075         0.148  1.00  -1.1  0.93    0.86
+5         -0.133         0.128  0.88  -1.2  1.08    1.08
+6         -0.236         0.172  1.09  -1.2  1.01    1.01
+7          0.011         0.192  0.72  -1.1  1.01    0.95
+8         -0.073         0.328  1.03  -1.3  1.00    1.00
+9         -0.154         0.233  0.99  -1.1  1.11    0.94
+10        -0.077         0.037  0.93  -1.0  1.00    1.02
+   sigma_K lp__
+1     0.99 -287
+2     0.88 -285
+3     1.06 -284
+4     0.92 -282
+5     0.99 -282
+6     0.88 -282
+7     1.06 -284
+8     1.03 -283
+9     0.99 -282
+10    0.92 -281
+# ... with 3990 more draws
+# ... hidden reserved variables {&#39;.chain&#39;, &#39;.iteration&#39;, &#39;.draw&#39;}</code></pre>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r">
+<span class='va'>postA</span> <span class='op'>&lt;-</span> <span class='fu'>as_tibble</span><span class='op'>(</span><span class='va'>postA</span><span class='op'>)</span>
+<span class='va'>post2</span> <span class='op'>&lt;-</span> <span class='va'>postA</span> <span class='op'>%&gt;%</span>
   <span class='fu'>transmute</span><span class='op'>(</span>
     a <span class='op'>=</span> <span class='va'>b_R_C</span> ,
     b <span class='op'>=</span> <span class='va'>b_K_R</span>,
@@ -6277,7 +6535,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-41-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-45-1.png" width="1536" /></p>
 </div>
 <p>Note that when you ask <code>ggdag</code> to assess how to obtain an unbiased estimate of C on K it will tell you you don’t need to condition on R.</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -6291,7 +6549,7 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-42-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-46-1.png" width="1536" /></p>
 </div>
 <p>Yet recall when we just assessed the relationship of C on K we got this:</p>
 <div class="layout-chunk" data-layout="l-body-outset">
@@ -6304,19 +6562,178 @@ Show code
 </code></pre>
 </div>
 </details>
-<p><img src="index_files/figure-html5/unnamed-chunk-43-1.png" width="1536" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-47-1.png" width="1536" /></p>
 </div>
 <p>Is the DAG wrong?</p>
 <p>No. The fact that C<span class="math inline">\(\to\)</span>R is positive and R<span class="math inline">\(\to\)</span>K is negative means that if we were to increase C, we wouldn’t reliably increase K. The total effect of C just isn’t reliable!</p>
 <h2 id="readings">Readings</h2>
-<p>Required readings are as follows:</p>
+<p>Readings are as follows:</p>
 <ul>
 <li><span class="citation" data-cites="rohrer2018">@rohrer2018</span> <a href="https://journals.sagepub.com/doi/full/10.1177/2515245917745629">link</a></li>
 <li><span class="citation" data-cites="barrett2021">@barrett2021</span> <a href="https://cran.r-project.org/package=ggdag">link</a></li>
 <li><span class="citation" data-cites="mcelreath2020">@mcelreath2020</span><a href="https://tewaharoa.victoria.ac.nz/discovery/fulldisplay?docid=alma99179374299902386&amp;context=L&amp;vid=64VUW_INST:VUWNUI&amp;search_scope=MyInst_and_CI&amp;tab=all&amp;lang=en">link</a></li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
-<section class="footnotes" role="doc-endnotes">
+<!-- #  -->
+<!-- # ```{r include = FALSE, eval = FALSE} -->
+<!-- # library(ggdag) -->
+<!-- # # ds2 <- dag_sd %>% -->
+<!-- # #   ggdag_dseparated( -->
+<!-- # #     from = "X", -->
+<!-- # #     to = "Y", -->
+<!-- # #     controlling_for = "D", -->
+<!-- # #     text = FALSE, -->
+<!-- # #     use_labels = "label" -->
+<!-- # #   )  + -->
+<!-- # #   ggtitle("Meaning ~ Religion + Friends", -->
+<!-- # #           subtitle = "Conditioning on a descendent induces collider bias.") -->
+<!-- #  -->
+<!-- # dgg <- dagify( -->
+<!-- #   sc ~ m + geo + l + hist, -->
+<!-- #   l ~ geo + hist, -->
+<!-- #   m ~ geo + l + hist,  -->
+<!-- #   labels = c( -->
+<!-- #     "sc" = "social complexity", -->
+<!-- #     "m" = "gods of cooperation", -->
+<!-- #     "l" = "language similarity", -->
+<!-- #     "hist" = "shared history" -->
+<!-- #   ), -->
+<!-- #   exposure = "m", -->
+<!-- #   outcome = "sc" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- # ds3 <- ggdag::ggdag_adjustment_set(dgg, -->
+<!-- #                                    text = FALSE, -->
+<!-- #                                    use_labels = "label") + labs(title = "Esimating the Causal Effects of Cooperative Gods on Social Complexity Requires adjusting for geographical proximity, shared cultural history, and language similarities.") +  -->
+<!-- #   scale_colour_viridis_d( -->
+<!-- #   alpha = 1, -->
+<!-- #   begin = 0, -->
+<!-- #   end = 1, -->
+<!-- #   direction = 1, -->
+<!-- #   option = "D", -->
+<!-- #   aesthetics = "colour" -->
+<!-- # ) -->
+<!-- #  -->
+<!-- #  -->
+<!-- # +  -->
+<!-- #   geom_dag_point( -->
+<!-- #    colour = "grey50" -->
+<!-- #   ) -->
+<!-- #    -->
+<!-- #  -->
+<!-- # ds3 -->
+<!-- #  -->
+<!-- #  -->
+<!-- # dagify( -->
+<!-- #   sc2 ~ sc1 + m1 + m2 +  geo + l2 + hist2, -->
+<!-- #   m2 ~ m1 + geo + l2 + hist2, -->
+<!-- #   l2 ~ l1 + geo + hist2, -->
+<!-- #   his2 ~ hist1 + geo, -->
+<!-- #   m1 ~ geo + l1 + hist1, -->
+<!-- #   l1 ~ geo + hist1, -->
+<!-- #   labels = c( -->
+<!-- #     "sc2" = "social complexity 2", -->
+<!-- #     "sc1" = "social complexity 2", -->
+<!-- #     "m2" = "gods of cooperation2", -->
+<!-- #     "m1" = "gods of cooperation1", -->
+<!-- #     "l2" = "language similarity2", -->
+<!-- #     "l1" = "language similarity1", -->
+<!-- #     "hist1" = "shared history1", -->
+<!-- #      "hist2" = "shared history2" -->
+<!-- #   ), -->
+<!-- #   exposure = "m1", -->
+<!-- #   outcome = "sc2" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- #  -->
+<!-- #  -->
+<!-- # library(ggdag) -->
+<!-- # dgg <- dagify( -->
+<!-- #   sc2 ~ mscp1 + mscp2 + sc1 + geo2 + l2 + hist2, -->
+<!-- #   mscp2 ~ mscp1 + geo1 + l1 + hist1, -->
+<!-- #   l2 ~ l1 + geo2 + hist2 + mscp2, -->
+<!-- #   hist2 ~ hist1 + mscp2 + geo2 + l2, -->
+<!-- #   l1 ~ geo1 + hist1 + mscp1, -->
+<!-- #   geo2 ~ geo1 + mscp1 + l2, -->
+<!-- #   geo1 ~ mscp1 + l1 + hist1, -->
+<!-- #   labels = c( -->
+<!-- #     "sc2" = "social complexity2", -->
+<!-- #     "sc1" = "social complexity2", -->
+<!-- #     "mscp2" = "gods of cooperation2", -->
+<!-- #     "mscp1" = "gods of cooperation", -->
+<!-- #     "l2" = "language similarity2", -->
+<!-- #     "l1" = "language similarity1", -->
+<!-- #     "hist1" = "shared history1", -->
+<!-- #     "hist2" = "shared history2", -->
+<!-- #     "geo1"  = "geographical proximity1", -->
+<!-- #     "geo2"  = "geographical proximity2" -->
+<!-- #   ), -->
+<!-- #   exposure = "mscp1", -->
+<!-- #   outcome = "sc2" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- #  -->
+<!-- # dgg -->
+<!-- # # %>% -->
+<!-- # #   control_for(c("l","hist")) -->
+<!-- #  -->
+<!-- # ggdag::ggdag_dseparated(dgg, text = TRUE, from = "m1", to = "sc2", -->
+<!-- #                         controlling_for = c("l1","hist1","geo"), -->
+<!-- #   collider_lines = TRUE)  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_dseparated(dgg, text = TRUE, from = "m1", to = "sc2", collider_lines = TRUE)  -->
+<!-- #  -->
+<!-- # ggdag::ggdag(dgg, text = F, -->
+<!-- #              label= "Labels")  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_collider(dgg, text = TRUE)  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_adjustment_set(dgg, text = FALSE, use_labels = "label")  -->
+<!-- #  -->
+<!-- #  -->
+<!-- #  -->
+<!-- # dgg <- dagify( -->
+<!-- #   mTBI ~ pproc + distress + ex, -->
+<!-- #   pproc ~ distress + pflex + tr + ex, -->
+<!-- #   pflex ~ ex, -->
+<!-- #   ex ~ tr, -->
+<!-- #   pproc ~ tr, -->
+<!-- #    -->
+<!-- #   # labels = c( -->
+<!-- #   #   "sc" = "social complexity", -->
+<!-- #   #   "m" = "gods of cooperation", -->
+<!-- #   #   "l" = "language similarity", -->
+<!-- #   #   "hist" = "shared history" -->
+<!-- #   # ), -->
+<!-- #   exposure = "pproc", -->
+<!-- #   outcome = "mTBI" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_adjustment_set( dgg,text = TRUE,use_labels = "label") -->
+<!-- #  -->
+<!-- #  -->
+<!-- # dgg <- dagify( -->
+<!-- #   mTBI ~ pproc + distress + ex, -->
+<!-- #   pproc ~ distress + pflex + tr + ex, -->
+<!-- #   pflex ~ ex, -->
+<!-- #   ex ~ tr, -->
+<!-- #   pflex ~ tr, -->
+<!-- #    -->
+<!-- #   # labels = c( -->
+<!-- #   #   "sc" = "social complexity", -->
+<!-- #   #   "m" = "gods of cooperation", -->
+<!-- #   #   "l" = "language similarity", -->
+<!-- #   #   "hist" = "shared history" -->
+<!-- #   # ), -->
+<!-- #   exposure = "pflex", -->
+<!-- #   outcome = "mTBI" -->
+<!-- # )  -->
+<!-- #  -->
+<!-- # ggdag::ggdag_adjustment_set(dgg,text = TRUE) +  -->
+<!-- #     geom_dag_label_repel(aes(label = label), -->
+<!-- #                        col = "steelblue", -->
+<!-- #                        show.legend = FALSE)  -->
+<div class="sourceCode" id="cb7"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<section class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
 <li id="fn1" role="doc-endnote"><p>We shall see there is no “backdoor path” from X to Y that would bias our estimate, hence the estimate X-&gt;Y is an unbiased causal estimate – again, conditional on our DAG.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
