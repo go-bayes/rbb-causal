@@ -1206,7 +1206,7 @@ plot(ms1)
 
 Is the DAG wrong? 
 
-No. The fact that C$\to$R is positive and R$\to$K is negative means that if we were to increase C, we wouldn't reliably increase K. The total effect of C just isn't reliable!
+No. The fact that C$\to$R is positive and R$\to$K is negative means that if we were to increase C, we wouldn't reliably increase K. The total effect of C just isn't reliable.  (Note, Rubin describes this somewhere, as does Tyler Vanderweele's 2015, add references ... anon.)
 
 
 ## Readings
